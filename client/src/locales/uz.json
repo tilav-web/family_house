@@ -1,0 +1,119 @@
+{
+  "nav": {
+    "home": "Bosh sahifa",
+    "about": "Biz haqimizda",
+    "services": "Xizmatlar",
+    "rooms": "Xonalar",
+    "news": "Yangiliklar",
+    "testimonials": "Fikrlar",
+    "videos": "Videolar",
+    "contact": "Aloqa",
+    "admin": "Admin"
+  },
+  "hero": {
+    "title": "Family House",
+    "subtitle": "Sizning oilangizning turar joyi",
+    "cta": "Biz bilan bog'lanish",
+    "scroll": "Pastga suring"
+  },
+  "about": {
+    "title": "Biz haqimizda",
+    "label": "Mehmonxona haqida"
+  },
+  "services": {
+    "title": "Bizning xizmatlar",
+    "label": "Xizmatlar",
+    "subtitle": "Mehmonlarimiz uchun eng yaxshi xizmatlarni taqdim etamiz"
+  },
+  "rooms": {
+    "title": "Xonalar",
+    "label": "Xonalarimiz",
+    "subtitle": "Har bir mehmon uchun qulay va zamonaviy xonalar",
+    "price": "narx",
+    "perNight": "tuniga",
+    "currency": "so'm",
+    "amenities": "Qulayliklar",
+    "viewDetails": "Batafsil ko'rish",
+    "notFound": "Xona topilmadi",
+    "gallery": "Galereya",
+    "imagesCount": "rasm",
+    "sceneCount": "ko'rinish",
+    "virtualTour": "360° sayohat",
+    "virtualTourSubtitle": "Xona ichini panorama rejimida ko'ring va sahnalar orasida erkin yuring.",
+    "bookNow": "Bog'lanish",
+    "exploreRoom": "Rasmlarni ko'rish",
+    "featuredStay": "Tanlangan xona"
+  },
+  "news": {
+    "title": "Yangiliklar",
+    "label": "So'nggi yangiliklar",
+    "subtitle": "Mehmonxonamizdagi eng so'nggi voqealar",
+    "readMore": "Batafsil o'qish",
+    "back": "Orqaga",
+    "backHome": "Bosh sahifaga",
+    "share": "Ulashish",
+    "notFound": "Yangilik topilmadi",
+    "readingTime": "daqiqalik o'qish"
+  },
+  "testimonials": {
+    "title": "Mehmonlar fikrlari",
+    "label": "Fikrlar"
+  },
+  "videos": {
+    "title": "Videolar",
+    "label": "Instagram",
+    "subtitle": "Bizning eng yaxshi lahzalarimiz"
+  },
+  "contact": {
+    "title": "Biz bilan bog'lanish",
+    "label": "Aloqa",
+    "subtitle": "Savollaringiz bormi? Biz bilan bog'laning!",
+    "name": "Ism",
+    "namePlaceholder": "Ismingizni kiriting",
+    "phone": "Telefon",
+    "email": "Email",
+    "message": "Xabar",
+    "messagePlaceholder": "Xabaringizni yozing...",
+    "send": "Yuborish",
+    "success": "Xabar muvaffaqiyatli yuborildi!",
+    "error": "Xatosi! Iltimos, qaytadan urinib ko'ring.",
+    "phoneLabel": "Telefon",
+    "phoneNumber": "+998 90 123 45 67",
+    "emailLabel": "Email",
+    "emailAddress": "info@familyhouse.uz",
+    "addressLabel": "Manzil",
+    "address": "Toshkent sh., Chilonzor tumani"
+  },
+  "footer": {
+    "description": "Oilaviy mehmonxona — sizning qulayligingiz va dam olishingiz uchun.",
+    "quickLinks": "Tezkor havolalar",
+    "contactInfo": "Aloqa ma'lumotlari",
+    "rights": "Barcha huquqlar himoyalangan.",
+    "madeWith": "Family House tomonidan yaratilgan"
+  },
+  "admin": {
+    "login": "Admin Kirish",
+    "username": "Foydalanuvchi nomi",
+    "password": "Parol",
+    "submit": "Kirish",
+    "logout": "Chiqish",
+    "dashboard": "Boshqaruv paneli",
+    "services": "Xizmatlar",
+    "rooms": "Xonalar",
+    "news": "Yangiliklar",
+    "testimonials": "Fikrlar",
+    "videos": "Videolar",
+    "contacts": "Aloqalar",
+    "hotelInfo": "Mehmonxona ma'lumotlari",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "create": "Yaratish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "confirm": "Tasdiqlash",
+    "confirmDelete": "Rostdan ham o'chirmoqchi musiz?",
+    "loading": "Yuklanmoqda...",
+    "error": "Xatosi",
+    "success": "Muvaffaqiyatli"
+  }
+}

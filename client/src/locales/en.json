@@ -1,0 +1,119 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "rooms": "Rooms",
+    "news": "News",
+    "testimonials": "Testimonials",
+    "videos": "Videos",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "hero": {
+    "title": "Family House",
+    "subtitle": "Your family's home away from home",
+    "cta": "Contact Us",
+    "scroll": "Scroll down"
+  },
+  "about": {
+    "title": "About Us",
+    "label": "About the hotel"
+  },
+  "services": {
+    "title": "Our Services",
+    "label": "Services",
+    "subtitle": "We offer the best services for our guests"
+  },
+  "rooms": {
+    "title": "Rooms",
+    "label": "Our Rooms",
+    "subtitle": "Comfortable and modern rooms for every guest",
+    "price": "price",
+    "perNight": "per night",
+    "currency": "UZS",
+    "amenities": "Amenities",
+    "viewDetails": "View Details",
+    "notFound": "Room not found",
+    "gallery": "Gallery",
+    "imagesCount": "photos",
+    "sceneCount": "views",
+    "virtualTour": "360° Tour",
+    "virtualTourSubtitle": "Step through the room in panorama mode and move across every scene.",
+    "bookNow": "Contact for booking",
+    "exploreRoom": "Open gallery",
+    "featuredStay": "Featured Stay"
+  },
+  "news": {
+    "title": "News",
+    "label": "Latest News",
+    "subtitle": "Latest events at our hotel",
+    "readMore": "Read More",
+    "back": "Back",
+    "backHome": "Back to Home",
+    "share": "Share",
+    "notFound": "News not found",
+    "readingTime": "min read"
+  },
+  "testimonials": {
+    "title": "Guest Reviews",
+    "label": "Testimonials"
+  },
+  "videos": {
+    "title": "Videos",
+    "label": "Instagram",
+    "subtitle": "Our best moments"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "label": "Get in Touch",
+    "subtitle": "Have questions? Get in touch with us!",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "phone": "Phone",
+    "email": "Email",
+    "message": "Message",
+    "messagePlaceholder": "Write your message...",
+    "send": "Send",
+    "success": "Message sent successfully!",
+    "error": "Error! Please try again.",
+    "phoneLabel": "Phone",
+    "phoneNumber": "+998 90 123 45 67",
+    "emailLabel": "Email",
+    "emailAddress": "info@familyhouse.uz",
+    "addressLabel": "Address",
+    "address": "Tashkent, Chilanzar district"
+  },
+  "footer": {
+    "description": "Family hotel — for your comfort and relaxation.",
+    "quickLinks": "Quick Links",
+    "contactInfo": "Contact Info",
+    "rights": "All rights reserved.",
+    "madeWith": "Made by Family House"
+  },
+  "admin": {
+    "login": "Admin Login",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign In",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "services": "Services",
+    "rooms": "Rooms",
+    "news": "News",
+    "testimonials": "Testimonials",
+    "videos": "Videos",
+    "contacts": "Contacts",
+    "hotelInfo": "Hotel Information",
+    "edit": "Edit",
+    "delete": "Delete",
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirmDelete": "Are you sure you want to delete?",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}

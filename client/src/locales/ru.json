@@ -1,0 +1,119 @@
+{
+  "nav": {
+    "home": "Главная",
+    "about": "О нас",
+    "services": "Услуги",
+    "rooms": "Номера",
+    "news": "Новости",
+    "testimonials": "Отзывы",
+    "videos": "Видео",
+    "contact": "Контакты",
+    "admin": "Админ"
+  },
+  "hero": {
+    "title": "Family House",
+    "subtitle": "Дом для вашей семьи",
+    "cta": "Свяжитесь с нами",
+    "scroll": "Прокрутите вниз"
+  },
+  "about": {
+    "title": "О нас",
+    "label": "Об отеле"
+  },
+  "services": {
+    "title": "Наши услуги",
+    "label": "Услуги",
+    "subtitle": "Мы предлагаем лучшие услуги для наших гостей"
+  },
+  "rooms": {
+    "title": "Номера",
+    "label": "Наши номера",
+    "subtitle": "Комфортные и современные номера для каждого гостя",
+    "price": "цена",
+    "perNight": "за ночь",
+    "currency": "сум",
+    "amenities": "Удобства",
+    "viewDetails": "Подробнее",
+    "notFound": "Номер не найден",
+    "gallery": "Галерея",
+    "imagesCount": "фото",
+    "sceneCount": "видов",
+    "virtualTour": "360° тур",
+    "virtualTourSubtitle": "Осмотрите номер в панорамном режиме и переходите между сценами.",
+    "bookNow": "Связаться для брони",
+    "exploreRoom": "Открыть галерею",
+    "featuredStay": "Рекомендуемый номер"
+  },
+  "news": {
+    "title": "Новости",
+    "label": "Последние новости",
+    "subtitle": "Последние события в нашем отеле",
+    "readMore": "Читать дальше",
+    "back": "Назад",
+    "backHome": "На главную",
+    "share": "Поделиться",
+    "notFound": "Новость не найдена",
+    "readingTime": "мин чтения"
+  },
+  "testimonials": {
+    "title": "Отзывы гостей",
+    "label": "Отзывы"
+  },
+  "videos": {
+    "title": "Видео",
+    "label": "Instagram",
+    "subtitle": "Наши лучшие моменты"
+  },
+  "contact": {
+    "title": "Свяжитесь с нами",
+    "label": "Контакты",
+    "subtitle": "Есть вопросы? Свяжитесь с нами!",
+    "name": "Имя",
+    "namePlaceholder": "Введите ваше имя",
+    "phone": "Телефон",
+    "email": "Email",
+    "message": "Сообщение",
+    "messagePlaceholder": "Напишите ваше сообщение...",
+    "send": "Отправить",
+    "success": "Сообщение отправлено успешно!",
+    "error": "Ошибка! Пожалуйста, попробуйте еще раз.",
+    "phoneLabel": "Телефон",
+    "phoneNumber": "+998 90 123 45 67",
+    "emailLabel": "Email",
+    "emailAddress": "info@familyhouse.uz",
+    "addressLabel": "Адрес",
+    "address": "г. Ташкент, Чиланзарский район"
+  },
+  "footer": {
+    "description": "Семейная гостиница — для вашего комфорта и отдыха.",
+    "quickLinks": "Быстрые ссылки",
+    "contactInfo": "Контактная информация",
+    "rights": "Все права защищены.",
+    "madeWith": "Создано Family House"
+  },
+  "admin": {
+    "login": "Вход в админ",
+    "username": "Имя пользователя",
+    "password": "Пароль",
+    "submit": "Войти",
+    "logout": "Выход",
+    "dashboard": "Панель управления",
+    "services": "Услуги",
+    "rooms": "Номера",
+    "news": "Новости",
+    "testimonials": "Отзывы",
+    "videos": "Видео",
+    "contacts": "Контакты",
+    "hotelInfo": "Информация об отеле",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "create": "Создать",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "confirmDelete": "Вы уверены, что хотите удалить?",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно"
+  }
+}

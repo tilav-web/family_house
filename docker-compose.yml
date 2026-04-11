@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: family-house-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: family_house
+      POSTGRES_USER: family_house_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-strongpassword}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U family_house_user -d family_house"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: family-house-server
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      CLIENT_URL: http://localhost
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: family_house
+      DB_USER: family_house_user
+      DB_PASSWORD: ${DB_PASSWORD:-strongpassword}
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      JWT_EXPIRES_IN: 7d
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      UPLOADS_PATH: /app/uploads
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: family-house-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  uploads:

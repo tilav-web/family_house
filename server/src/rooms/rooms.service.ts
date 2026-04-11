@@ -1,0 +1,494 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Room } from './entities/room.entity';
+import { RoomImage } from './entities/room-image.entity';
+import { PanoramaScene } from './entities/panorama-scene.entity';
+import { PanoramaHotspot } from './entities/panorama-hotspot.entity';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
+import { CreatePanoramaSceneDto } from './dto/create-panorama-scene.dto';
+import { UpdatePanoramaSceneDto } from './dto/update-panorama-scene.dto';
+import { CreatePanoramaHotspotDto } from './dto/create-panorama-hotspot.dto';
+import { UpdatePanoramaHotspotDto } from './dto/update-panorama-hotspot.dto';
+
+@Injectable()
+export class RoomsService {
+  constructor(
+    @InjectRepository(Room)
+    private readonly roomsRepository: Repository<Room>,
+    @InjectRepository(RoomImage)
+    private readonly roomImagesRepository: Repository<RoomImage>,
+    @InjectRepository(PanoramaScene)
+    private readonly panoramaScenesRepository: Repository<PanoramaScene>,
+    @InjectRepository(PanoramaHotspot)
+    private readonly panoramaHotspotsRepository: Repository<PanoramaHotspot>,
+  ) {}
+
+  async findAllPublic(): Promise<Room[]> {
+    const rooms = await this.roomsRepository.find({
+      where: { isActive: true },
+      relations: {
+        images: true,
+        scenes: {
+          hotspots: {
+            targetScene: true,
+          },
+        },
+      },
+      order: {
+        order: 'ASC',
+      },
+    });
+
+    return rooms.map((room) => this.serializeRoom(room, false));
+  }
+
+  async findAllAdmin(): Promise<Room[]> {
+    const rooms = await this.roomsRepository.find({
+      relations: {
+        images: true,
+        scenes: {
+          hotspots: {
+            targetScene: true,
+          },
+        },
+      },
+      order: {
+        order: 'ASC',
+      },
+    });
+
+    return rooms.map((room) => this.serializeRoom(room, true));
+  }
+
+  async findOnePublic(id: string): Promise<Room> {
+    const room = await this.roomsRepository.findOne({
+      where: { id, isActive: true },
+      relations: {
+        images: true,
+        scenes: {
+          hotspots: {
+            targetScene: true,
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException(`Room with id ${id} not found`);
+    }
+
+    return this.serializeRoom(room, false);
+  }
+
+  async findOneAdmin(id: string): Promise<Room> {
+    const room = await this.roomsRepository.findOne({
+      where: { id },
+      relations: {
+        images: true,
+        scenes: {
+          hotspots: {
+            targetScene: true,
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException(`Room with id ${id} not found`);
+    }
+
+    return this.serializeRoom(room, true);
+  }
+
+  async create(dto: CreateRoomDto): Promise<Room> {
+    const room = this.roomsRepository.create(dto);
+    const savedRoom = await this.roomsRepository.save(room);
+    return this.findOneAdmin(savedRoom.id);
+  }
+
+  async update(id: string, dto: UpdateRoomDto): Promise<Room> {
+    const room = await this.findOneEntityOrThrow(id);
+    Object.assign(room, dto);
+    await this.roomsRepository.save(room);
+    return this.findOneAdmin(id);
+  }
+
+  async remove(id: string): Promise<void> {
+    const room = await this.findOneEntityOrThrow(id);
+    await this.roomsRepository.remove(room);
+  }
+
+  async addImages(
+    roomId: string,
+    files: Express.Multer.File[],
+  ): Promise<RoomImage[]> {
+    await this.findOneEntityOrThrow(roomId);
+
+    if (!files.length) {
+      throw new BadRequestException('At least one image is required');
+    }
+
+    const existingImagesCount = await this.roomImagesRepository.count({
+      where: { roomId },
+    });
+
+    const images = await Promise.all(
+      files.map((file, index) =>
+        this.roomImagesRepository.save(
+          this.roomImagesRepository.create({
+            url: `/uploads/images/${file.filename}`,
+            roomId,
+            order: existingImagesCount + index,
+          }),
+        ),
+      ),
+    );
+
+    const room = await this.findOneEntityOrThrow(roomId);
+    if (!room.thumbnailUrl && images[0]) {
+      room.thumbnailUrl = images[0].url;
+      await this.roomsRepository.save(room);
+    }
+
+    return images;
+  }
+
+  async removeImage(roomId: string, imageId: string): Promise<void> {
+    const image = await this.roomImagesRepository.findOne({
+      where: { id: imageId, roomId },
+    });
+
+    if (!image) {
+      throw new NotFoundException(`Image with id ${imageId} not found`);
+    }
+
+    await this.roomImagesRepository.remove(image);
+  }
+
+  async reorderImages(roomId: string, imageIds: string[]): Promise<void> {
+    await this.findOneEntityOrThrow(roomId);
+
+    const images = await this.roomImagesRepository.find({
+      where: { roomId },
+    });
+
+    if (images.length !== imageIds.length) {
+      throw new BadRequestException(
+        'Image reorder payload does not match room images',
+      );
+    }
+
+    const imageIdsSet = new Set(images.map((image) => image.id));
+    imageIds.forEach((imageId) => {
+      if (!imageIdsSet.has(imageId)) {
+        throw new BadRequestException(
+          'All reordered images must belong to the room',
+        );
+      }
+    });
+
+    await Promise.all(
+      imageIds.map((imageId, index) =>
+        this.roomImagesRepository.update(imageId, { order: index }),
+      ),
+    );
+  }
+
+  async createScene(
+    roomId: string,
+    dto: CreatePanoramaSceneDto,
+  ): Promise<PanoramaScene> {
+    await this.findOneEntityOrThrow(roomId);
+
+    const scene = this.panoramaScenesRepository.create({
+      roomId,
+      title: dto.title,
+      initialYaw: dto.initialYaw ?? 0,
+      initialPitch: dto.initialPitch ?? 0,
+      initialHfov: dto.initialHfov ?? 100,
+      isDefault: dto.isDefault ?? false,
+      order: dto.order ?? 0,
+      isActive: dto.isActive ?? true,
+    });
+
+    const savedScene = await this.panoramaScenesRepository.save(scene);
+    await this.ensureSingleDefaultScene(
+      roomId,
+      savedScene.id,
+      savedScene.isDefault,
+    );
+
+    return this.findSceneOrThrow(roomId, savedScene.id);
+  }
+
+  async updateScene(
+    roomId: string,
+    sceneId: string,
+    dto: UpdatePanoramaSceneDto,
+  ): Promise<PanoramaScene> {
+    const scene = await this.findSceneOrThrow(roomId, sceneId);
+    Object.assign(scene, dto);
+    await this.panoramaScenesRepository.save(scene);
+    await this.ensureSingleDefaultScene(
+      roomId,
+      sceneId,
+      dto.isDefault === true,
+    );
+    return this.findSceneOrThrow(roomId, sceneId);
+  }
+
+  async removeScene(roomId: string, sceneId: string): Promise<void> {
+    const scene = await this.findSceneOrThrow(roomId, sceneId);
+    await this.panoramaScenesRepository.remove(scene);
+    await this.ensureRoomHasDefaultScene(roomId);
+  }
+
+  async uploadScenePanorama(
+    roomId: string,
+    sceneId: string,
+    file: Express.Multer.File,
+  ): Promise<PanoramaScene> {
+    const scene = await this.findSceneOrThrow(roomId, sceneId);
+    scene.panoramaUrl = `/uploads/panoramas/${file.filename}`;
+
+    if (!scene.thumbnailUrl) {
+      scene.thumbnailUrl = scene.panoramaUrl;
+    }
+
+    await this.panoramaScenesRepository.save(scene);
+    return this.findSceneOrThrow(roomId, sceneId);
+  }
+
+  async uploadSceneThumbnail(
+    roomId: string,
+    sceneId: string,
+    file: Express.Multer.File,
+  ): Promise<PanoramaScene> {
+    const scene = await this.findSceneOrThrow(roomId, sceneId);
+    scene.thumbnailUrl = `/uploads/scene-thumbnails/${file.filename}`;
+    await this.panoramaScenesRepository.save(scene);
+    return this.findSceneOrThrow(roomId, sceneId);
+  }
+
+  async createHotspot(
+    roomId: string,
+    sceneId: string,
+    dto: CreatePanoramaHotspotDto,
+  ): Promise<PanoramaHotspot> {
+    await this.findSceneOrThrow(roomId, sceneId);
+    await this.validateHotspot(roomId, dto.type, dto.targetSceneId);
+
+    const hotspot = this.panoramaHotspotsRepository.create({
+      sceneId,
+      type: dto.type,
+      label: dto.label,
+      yaw: dto.yaw,
+      pitch: dto.pitch,
+      targetSceneId: dto.targetSceneId ?? null,
+      iconUrl: dto.iconUrl ?? null,
+      targetYaw: dto.targetYaw ?? null,
+      targetPitch: dto.targetPitch ?? null,
+      targetHfov: dto.targetHfov ?? null,
+      order: dto.order ?? 0,
+    });
+
+    const savedHotspot = await this.panoramaHotspotsRepository.save(hotspot);
+    return this.findHotspotOrThrow(sceneId, savedHotspot.id);
+  }
+
+  async updateHotspot(
+    roomId: string,
+    sceneId: string,
+    hotspotId: string,
+    dto: UpdatePanoramaHotspotDto,
+  ): Promise<PanoramaHotspot> {
+    await this.findSceneOrThrow(roomId, sceneId);
+    const hotspot = await this.findHotspotOrThrow(sceneId, hotspotId);
+
+    const nextType = dto.type ?? hotspot.type;
+    const nextTargetSceneId =
+      dto.targetSceneId !== undefined
+        ? dto.targetSceneId
+        : (hotspot.targetSceneId ?? undefined);
+
+    await this.validateHotspot(roomId, nextType, nextTargetSceneId);
+
+    Object.assign(hotspot, {
+      ...dto,
+      targetSceneId:
+        dto.targetSceneId ??
+        (nextType === 'scene' ? hotspot.targetSceneId : null),
+      iconUrl: dto.iconUrl ?? hotspot.iconUrl,
+      targetYaw: dto.targetYaw ?? hotspot.targetYaw,
+      targetPitch: dto.targetPitch ?? hotspot.targetPitch,
+      targetHfov: dto.targetHfov ?? hotspot.targetHfov,
+    });
+
+    if (nextType === 'info') {
+      hotspot.targetSceneId = null;
+      hotspot.targetYaw = null;
+      hotspot.targetPitch = null;
+      hotspot.targetHfov = null;
+    }
+
+    await this.panoramaHotspotsRepository.save(hotspot);
+    return this.findHotspotOrThrow(sceneId, hotspotId);
+  }
+
+  async removeHotspot(sceneId: string, hotspotId: string): Promise<void> {
+    const hotspot = await this.findHotspotOrThrow(sceneId, hotspotId);
+    await this.panoramaHotspotsRepository.remove(hotspot);
+  }
+
+  private async findOneEntityOrThrow(id: string): Promise<Room> {
+    const room = await this.roomsRepository.findOne({ where: { id } });
+    if (!room) {
+      throw new NotFoundException(`Room with id ${id} not found`);
+    }
+    return room;
+  }
+
+  private async findSceneOrThrow(
+    roomId: string,
+    sceneId: string,
+  ): Promise<PanoramaScene> {
+    const scene = await this.panoramaScenesRepository.findOne({
+      where: { id: sceneId, roomId },
+      relations: {
+        hotspots: {
+          targetScene: true,
+        },
+      },
+    });
+
+    if (!scene) {
+      throw new NotFoundException(`Scene with id ${sceneId} not found`);
+    }
+
+    scene.hotspots = [...(scene.hotspots ?? [])].sort(
+      (a, b) => a.order - b.order,
+    );
+    return scene;
+  }
+
+  private async findHotspotOrThrow(
+    sceneId: string,
+    hotspotId: string,
+  ): Promise<PanoramaHotspot> {
+    const hotspot = await this.panoramaHotspotsRepository.findOne({
+      where: { id: hotspotId, sceneId },
+      relations: {
+        targetScene: true,
+      },
+    });
+
+    if (!hotspot) {
+      throw new NotFoundException(`Hotspot with id ${hotspotId} not found`);
+    }
+
+    return hotspot;
+  }
+
+  private serializeRoom(room: Room, includeInactiveScenes: boolean): Room {
+    room.images = [...(room.images ?? [])].sort((a, b) => a.order - b.order);
+
+    const sortedScenes = [...(room.scenes ?? [])]
+      .filter((scene) => includeInactiveScenes || scene.isActive)
+      .sort((a, b) => a.order - b.order);
+
+    const activeSceneIds = new Set(sortedScenes.map((scene) => scene.id));
+
+    room.scenes = sortedScenes.map((scene) => {
+      scene.hotspots = [...(scene.hotspots ?? [])]
+        .filter((hotspot) => {
+          if (includeInactiveScenes || hotspot.type !== 'scene') {
+            return true;
+          }
+
+          return hotspot.targetSceneId
+            ? activeSceneIds.has(hotspot.targetSceneId)
+            : false;
+        })
+        .sort((a, b) => a.order - b.order);
+
+      return scene;
+    });
+
+    return room;
+  }
+
+  private async validateHotspot(
+    roomId: string,
+    type: 'scene' | 'info',
+    targetSceneId?: string,
+  ): Promise<void> {
+    if (type === 'scene' && !targetSceneId) {
+      throw new BadRequestException('Scene hotspots must have a target scene');
+    }
+
+    if (!targetSceneId) {
+      return;
+    }
+
+    const targetScene = await this.panoramaScenesRepository.findOne({
+      where: { id: targetSceneId, roomId },
+    });
+
+    if (!targetScene) {
+      throw new BadRequestException(
+        'Hotspot target scene must belong to the same room',
+      );
+    }
+  }
+
+  private async ensureSingleDefaultScene(
+    roomId: string,
+    sceneId: string,
+    shouldBeDefault: boolean,
+  ): Promise<void> {
+    const scenes = await this.panoramaScenesRepository.find({
+      where: { roomId },
+      order: { order: 'ASC' },
+    });
+
+    if (!scenes.length) {
+      return;
+    }
+
+    const fallbackSceneId = scenes[0]?.id;
+    const defaultSceneId = shouldBeDefault
+      ? sceneId
+      : (scenes.find((scene) => scene.isDefault)?.id ?? fallbackSceneId);
+
+    await this.panoramaScenesRepository.update(
+      { roomId },
+      { isDefault: false },
+    );
+
+    if (defaultSceneId) {
+      await this.panoramaScenesRepository.update(defaultSceneId, {
+        isDefault: true,
+      });
+    }
+  }
+
+  private async ensureRoomHasDefaultScene(roomId: string): Promise<void> {
+    const scenes = await this.panoramaScenesRepository.find({
+      where: { roomId },
+      order: { order: 'ASC' },
+    });
+
+    const defaultScene = scenes.find((scene) => scene.isDefault);
+    if (!defaultScene && scenes[0]) {
+      await this.panoramaScenesRepository.update(scenes[0].id, {
+        isDefault: true,
+      });
+    }
+  }
+}
