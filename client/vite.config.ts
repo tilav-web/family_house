@@ -31,7 +31,7 @@ export default defineConfig({
           if (id.includes('node_modules/lexical') || id.includes('node_modules/@lexical')) {
             return 'vendor-editor'
           }
-          if (id.includes('node_modules/three') || id.includes('node_modules/pannellum')) {
+          if (id.includes('node_modules/three')) {
             return 'vendor-3d'
           }
           if (id.includes('node_modules/lucide-react')) {
