@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { Logo } from './Logo'
@@ -10,12 +11,16 @@ const navLinks = [
   { href: '#rooms', key: 'nav.rooms' },
   { href: '#news', key: 'nav.news' },
   { href: '#contact', key: 'nav.contact' },
+  { href: '#location', key: 'nav.location' },
 ]
 
 export function Header() {
   const { t, i18n } = useTranslation()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const isHomePage = location.pathname === '/'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
@@ -29,10 +34,20 @@ export function Header() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
+  // Detail sahifalarda header doim scrolled ko'rinishda
+  useEffect(() => {
+    if (!isHomePage) setScrolled(true)
+  }, [isHomePage])
+
   const scrollTo = (href: string) => {
     setMobileOpen(false)
-    const el = document.querySelector(href)
-    el?.scrollIntoView({ behavior: 'smooth' })
+
+    if (isHomePage) {
+      const el = document.querySelector(href)
+      el?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/' + href)
+    }
   }
 
   return (
@@ -51,8 +66,8 @@ export function Header() {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <a
-              href="#hero"
-              onClick={(e) => { e.preventDefault(); scrollTo('#hero') }}
+              href="/"
+              onClick={(e) => { e.preventDefault(); isHomePage ? scrollTo('#hero') : navigate('/') }}
               className="flex items-center gap-2 group"
             >
               <Logo />

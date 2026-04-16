@@ -3,11 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowUpRight,
   Check,
   ChevronLeft,
   ChevronRight,
   Eye,
+  Maximize2,
   Phone,
   X,
 } from 'lucide-react'
@@ -17,6 +17,7 @@ import { getLocalizedField } from '../lib/i18n-field'
 import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { Tour360Viewer } from '../components/Tour360Viewer'
+import { Footer } from '../components/layout/Footer'
 
 function splitAmenities(text: string): string[] {
   return text
@@ -68,8 +69,8 @@ export default function RoomDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="client-section flex min-h-screen items-center justify-center px-4">
+      <div className="min-h-screen bg-background pt-16 md:pt-20">
+        <div className="client-section flex min-h-[80vh] items-center justify-center px-4">
           <div className="client-grid" />
           <div className="client-panel rounded-lg px-8 py-10 text-center">
             <h1 className="text-4xl font-bold text-foreground">{t('rooms.notFound')}</h1>
@@ -78,14 +79,15 @@ export default function RoomDetailPage() {
             </Button>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pt-24">
-        <div className="container mx-auto px-4 lg:px-8">
+      <div className="min-h-screen bg-background pt-16 md:pt-20">
+        <div className="container mx-auto px-4 pt-8 lg:px-8">
           <Skeleton className="mb-8 h-[62vh] w-full rounded-lg" />
           <div className="grid gap-8 xl:grid-cols-[1.08fr_0.92fr]">
             <Skeleton className="h-[520px] rounded-lg" />
@@ -117,7 +119,7 @@ export default function RoomDetailPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16 md:pt-20">
         <section className="client-section overflow-hidden pb-24">
           <div className="client-grid" />
 
@@ -157,7 +159,7 @@ export default function RoomDetailPage() {
               </div>
             )}
 
-            <div className="absolute left-0 right-0 top-24 z-20">
+            <div className="absolute left-0 right-0 top-6 z-20">
               <div className="container mx-auto px-4 lg:px-8">
                 <Button
                   variant="outline"
@@ -322,36 +324,18 @@ export default function RoomDetailPage() {
                         </p>
                       </div>
                       <Button className="h-11 rounded-lg px-6" onClick={() => setTourOpen(true)}>
-                        360° Tour
-                        <ArrowUpRight className="h-4 w-4" />
+                        <Maximize2 className="h-4 w-4" />
+                        {t('rooms.virtualTour')}
                       </Button>
                     </div>
 
-                    <div
-                      onClick={() => setTourOpen(true)}
-                      className="mt-6 overflow-hidden rounded-lg border border-[var(--client-line)] bg-slate-950"
-                    >
-                      {scenes[0].thumbnailUrl || scenes[0].panoramaUrl ? (
-                        <div className="relative cursor-pointer">
-                          <img
-                            src={scenes[0].thumbnailUrl || scenes[0].panoramaUrl!}
-                            alt="360 preview"
-                            className="aspect-[16/9] w-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/76 via-black/18 to-transparent" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-white/15 text-white backdrop-blur-sm">
-                              <Eye className="h-6 w-6" />
-                            </div>
-                          </div>
-                          <div className="absolute bottom-0 left-0 right-0 p-5">
-                            <p className="text-lg font-semibold text-white">{t('rooms.virtualTour')}</p>
-                            <p className="mt-1 text-sm text-white/70">
-                              {scenes.length} {t('rooms.sceneCount')}
-                            </p>
-                          </div>
-                        </div>
-                      ) : null}
+                    <div className="mt-6">
+                      <Tour360Viewer
+                        scenes={scenes}
+                        initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
+                        heightClassName="h-[400px] md:h-[500px]"
+                        showThumbnails={false}
+                      />
                     </div>
                   </div>
                 )}
@@ -410,6 +394,7 @@ export default function RoomDetailPage() {
             </div>
           </div>
         </section>
+        <Footer />
       </div>
 
       <AnimatePresence>
@@ -418,27 +403,35 @@ export default function RoomDetailPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95"
+            className="fixed inset-0 z-[100] bg-black/90"
           >
-            <button
-              type="button"
-              onClick={() => setTourOpen(false)}
-              className="absolute right-4 top-4 z-[110] rounded-full border border-white/12 bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/18"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black/75" />
 
-            <div className="absolute left-4 top-4 z-[110]">
-              <p className="text-lg font-semibold text-white">{name}</p>
-              <p className="text-sm text-white/60">{t('rooms.virtualTour')}</p>
-            </div>
+            <div className="relative flex h-[100dvh] flex-col px-4 pb-4 pt-5 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold text-white">{name}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">
+                    {t('rooms.virtualTour')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTourOpen(false)}
+                  className="rounded-full border border-white/15 bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            <div className="h-full w-full p-4 pt-20">
-              <Tour360Viewer
-                scenes={scenes}
-                initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
-                heightClassName="h-[calc(100vh-7rem)]"
-              />
+              <div className="mt-4 flex-1">
+                <Tour360Viewer
+                  scenes={scenes}
+                  initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
+                  heightClassName="h-[calc(100dvh-6.5rem)]"
+                  showThumbnails={false}
+                />
+              </div>
             </div>
           </motion.div>
         )}

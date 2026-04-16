@@ -1,16 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { hotelInfoService } from '../../services/hotel-info.service'
-import heroFallback from '../../assets/hero.png'
+import heroDesktopPoster from '../../assets/hero-desktop.jpg'
+import heroMobilePoster from '../../assets/hero-mobile.jpg'
 import { Button } from '../ui/button'
 import { getLocalizedField } from '../../lib/i18n-field'
 
 export function HeroSection() {
   const { t, i18n } = useTranslation()
   const [isMobileViewport, setIsMobileViewport] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const { data: hotelInfo, isLoading } = useQuery({
     queryKey: ['hotelInfo'],
     queryFn: () => hotelInfoService.getInfo(),
@@ -31,6 +35,36 @@ export function HeroSection() {
     return () => mediaQuery.removeListener(syncViewport)
   }, [])
 
+  // Sahifa yuklanib bo'lgandan keyin videoni yuklashni boshlash
+  useEffect(() => {
+    const start = () => setShouldLoadVideo(true)
+
+    if (document.readyState === 'complete') {
+      // Sahifa allaqachon yuklangan — biroz kutib boshlash (asosiy kontent birinchi)
+      const timer = setTimeout(start, 300)
+      return () => clearTimeout(timer)
+    }
+
+    window.addEventListener('load', () => setTimeout(start, 300), { once: true })
+  }, [])
+
+  // Video src o'zgarganda (mobile/desktop) reset
+  useEffect(() => {
+    setVideoReady(false)
+  }, [isMobileViewport])
+
+  // Video yuklashni boshlash
+  useEffect(() => {
+    if (shouldLoadVideo && videoRef.current) {
+      videoRef.current.load()
+    }
+  }, [shouldLoadVideo, isMobileViewport])
+
+  const onVideoCanPlay = useCallback(() => {
+    setVideoReady(true)
+    videoRef.current?.play().catch(() => {})
+  }, [])
+
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -42,6 +76,7 @@ export function HeroSection() {
   const heroVideoUrl = isMobileViewport
     ? hotelInfo?.heroVideoMobile || '/mobile.mp4'
     : hotelInfo?.heroVideoDesktop || '/desktop.mp4'
+  const posterImage = hotelInfo?.imageUrl || (isMobileViewport ? heroMobilePoster : heroDesktopPoster)
 
   if (isLoading) {
     return (
@@ -61,18 +96,36 @@ export function HeroSection() {
 
   return (
     <section id="hero" className="relative z-10 h-screen w-full">
+      {/* 1-qadam: Poster rasm — darhol ko'rinadi (44KB) */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <img
+          src={posterImage}
+          alt=""
+          className="h-full w-full object-cover"
+          style={{
+            opacity: videoReady ? 0 : 1,
+            transition: 'opacity 1s ease-out',
+          }}
+        />
+      </div>
+
+      {/* 2-qadam: Video — sahifa yuklanib bo'lgandan keyin yuklanadi, fade-in */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <video
+          ref={videoRef}
           key={heroVideoUrl}
-          autoPlay
           muted
           loop
           playsInline
-          preload="auto"
-          poster={hotelInfo?.imageUrl || heroFallback}
-          className="w-full h-full object-cover"
+          preload="none"
+          onCanPlay={onVideoCanPlay}
+          className="h-full w-full object-cover"
+          style={{
+            opacity: videoReady ? 1 : 0,
+            transition: 'opacity 1s ease-in',
+          }}
         >
-          <source src={heroVideoUrl} type="video/mp4" />
+          {shouldLoadVideo && <source src={heroVideoUrl} type="video/mp4" />}
         </video>
       </div>
 

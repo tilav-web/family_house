@@ -17,7 +17,7 @@ export default function AdminNewsPage() {
     queryFn: () => newsService.findAllAdmin(1, 50),
   })
 
-  const { mutate: deleteNews } = useMutation({
+  const { mutate: deleteNews, isPending: deletingNews } = useMutation({
     mutationFn: (id: string) => newsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'news'] })
@@ -68,9 +68,10 @@ export default function AdminNewsPage() {
                 <Button
                   variant="destructive"
                   size="sm"
+                  disabled={deletingNews}
                   onClick={() => deleteNews(item.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deletingNews ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Trash2 className="h-4 w-4" />}
                 </Button>
               </div>
             </CardHeader>

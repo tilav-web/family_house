@@ -17,7 +17,7 @@ export default function AdminContactsPage() {
     queryFn: () => contactsService.findAll(page, 20),
   })
 
-  const { mutate: markAsRead } = useMutation({
+  const { mutate: markAsRead, isPending: markingRead } = useMutation({
     mutationFn: (id: string) => contactsService.markAsRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
@@ -25,7 +25,7 @@ export default function AdminContactsPage() {
     },
   })
 
-  const { mutate: deleteContact } = useMutation({
+  const { mutate: deleteContact, isPending: deletingContact } = useMutation({
     mutationFn: (id: string) => contactsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
@@ -66,17 +66,19 @@ export default function AdminContactsPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={markingRead}
                     onClick={() => markAsRead(contact.id)}
                   >
-                    Mark Read
+                    {markingRead ? '...' : 'Mark Read'}
                   </Button>
                 )}
                 <Button
                   variant="destructive"
                   size="sm"
+                  disabled={deletingContact}
                   onClick={() => deleteContact(contact.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deletingContact ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Trash2 className="h-4 w-4" />}
                 </Button>
               </div>
             </CardHeader>

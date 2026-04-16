@@ -29,6 +29,12 @@ export class HotelInfo {
   @Column({ type: 'jsonb', nullable: true })
   heroSubtext: I18nField;
 
+  @Column({ type: 'double precision', nullable: true })
+  latitude: number;
+
+  @Column({ type: 'double precision', nullable: true })
+  longitude: number;
+
   @UpdateDateColumn()
   updatedAt: Date;
 }

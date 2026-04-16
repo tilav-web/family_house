@@ -8,6 +8,7 @@
     "testimonials": "Отзывы",
     "videos": "Видео",
     "contact": "Контакты",
+    "location": "Расположение",
     "admin": "Админ"
   },
   "hero": {
@@ -82,7 +83,19 @@
     "emailLabel": "Email",
     "emailAddress": "info@familyhouse.uz",
     "addressLabel": "Адрес",
-    "address": "г. Ташкент, Чиланзарский район"
+    "address": "г. Карши, Кашкадарьинская область"
+  },
+  "location": {
+    "title": "Наш адрес",
+    "label": "Расположение",
+    "subtitle": "Наш отель удобно расположен — легко найти и удобно добраться",
+    "badge": "Карши",
+    "addressTitle": "Адрес",
+    "hoursTitle": "Время работы",
+    "hoursValue": "24 часа, 7 дней в неделю",
+    "landmarkTitle": "Ориентир",
+    "landmarkValue": "Центр города Карши",
+    "openMaps": "Открыть на карте"
   },
   "footer": {
     "description": "Семейная гостиница — для вашего комфорта и отдыха.",

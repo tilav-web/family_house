@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { getLocalizedField } from '../lib/i18n-field'
 import { LexicalRenderer } from '../components/editor/LexicalRenderer'
+import { Footer } from '../components/layout/Footer'
 
 export default function NewsDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,8 +27,8 @@ export default function NewsDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="client-section flex min-h-screen items-center justify-center px-4">
+      <div className="min-h-screen bg-background pt-16 md:pt-20">
+        <div className="client-section flex min-h-[80vh] items-center justify-center px-4">
           <div className="client-grid" />
           <div className="client-panel rounded-lg px-8 py-10 text-center">
             <h1 className="text-4xl font-bold text-foreground">{t('news.notFound')}</h1>
@@ -36,14 +37,15 @@ export default function NewsDetailPage() {
             </Button>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pt-24">
-        <div className="container mx-auto max-w-5xl px-4 lg:px-8">
+      <div className="min-h-screen bg-background pt-16 md:pt-20">
+        <div className="container mx-auto max-w-5xl px-4 pt-8 lg:px-8">
           <Skeleton className="mb-8 h-[52vh] w-full rounded-lg" />
           <Skeleton className="h-[540px] rounded-lg" />
         </div>
@@ -77,7 +79,7 @@ export default function NewsDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16 md:pt-20">
       <section className="client-section overflow-hidden pb-24">
         <div className="client-grid" />
 
@@ -95,7 +97,7 @@ export default function NewsDetailPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,var(--client-glow),transparent_34%),linear-gradient(135deg,var(--primary),transparent_65%)] opacity-80" />
           )}
 
-          <div className="absolute left-0 right-0 top-24 z-20">
+          <div className="absolute left-0 right-0 top-6 z-20">
             <div className="container mx-auto max-w-5xl px-4 lg:px-8">
               <Button
                 variant="outline"
@@ -184,6 +186,7 @@ export default function NewsDetailPage() {
           </motion.article>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }

@@ -53,6 +53,30 @@ export class PanoramaScene {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  targetForwardId: string | null;
+
+  @Column({ type: 'float', nullable: true })
+  targetForwardYaw: number | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  targetRightId: string | null;
+
+  @Column({ type: 'float', nullable: true })
+  targetRightYaw: number | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  targetBackId: string | null;
+
+  @Column({ type: 'float', nullable: true })
+  targetBackYaw: number | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  targetLeftId: string | null;
+
+  @Column({ type: 'float', nullable: true })
+  targetLeftYaw: number | null;
+
   @OneToMany(() => PanoramaHotspot, (hotspot) => hotspot.scene, {
     cascade: true,
     eager: false,

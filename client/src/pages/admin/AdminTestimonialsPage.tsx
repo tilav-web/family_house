@@ -83,7 +83,7 @@ export default function AdminTestimonialsPage() {
     },
   })
 
-  const { mutate: uploadPhoto } = useMutation({
+  const { mutate: uploadPhoto, isPending: uploadingPhoto } = useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>
       testimonialsService.uploadPhoto(id, file),
     onSuccess: () => {
@@ -96,7 +96,7 @@ export default function AdminTestimonialsPage() {
     },
   })
 
-  const { mutate: deleteTestimonial } = useMutation({
+  const { mutate: deleteTestimonial, isPending: deletingTestimonial } = useMutation({
     mutationFn: (id: string) => testimonialsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'testimonials'] })
@@ -333,9 +333,10 @@ export default function AdminTestimonialsPage() {
                 <Button
                   variant="destructive"
                   size="sm"
+                  disabled={deletingTestimonial}
                   onClick={() => deleteTestimonial(testimonial.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deletingTestimonial ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Trash2 className="h-4 w-4" />}
                 </Button>
               </div>
             </CardHeader>

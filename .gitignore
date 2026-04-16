@@ -1,2 +1,16 @@
 .claude/
 .codex
+
+# Uploads
+server/uploads/
+
+# Node
+node_modules/
+
+# Environment
+.env
+server/.env
+
+# Build
+client/dist/
+server/dist/

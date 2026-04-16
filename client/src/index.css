@@ -329,8 +329,13 @@
   }
 }
 
+/* Pannellum hotspot bazani markazlashtirish — 28px/2 = 14px */
+.pnlm-hotspot-base {
+  margin-left: -14px !important;
+  margin-top: -14px !important;
+}
+
 .tour-hotspot {
-  position: relative;
   display: flex;
   height: 28px;
   width: 28px;
@@ -352,15 +357,7 @@
 }
 
 .tour-hotspot--scene::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  height: 14px;
-  width: 14px;
-  border-top: 2px solid white;
-  border-right: 2px solid white;
-  transform: translate(-55%, -50%) rotate(45deg);
+  content: none;
 }
 
 .tour-hotspot--info::after {
@@ -391,4 +388,98 @@
 
 .tour-hotspot:hover .tour-hotspot__label {
   opacity: 1;
+}
+
+.tour-hotspot--scene .tour-hotspot__label {
+  opacity: 0.85;
+}
+
+.tour-hotspot--scene:hover .tour-hotspot__label {
+  opacity: 1;
+}
+
+.tour-hotspot--scene {
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.tour-hotspot--scene:hover {
+  transform: scale(1.15);
+}
+
+/* ─── Scene transition overlay ─── */
+.scene-transition-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  opacity: 0;
+  transition: none;
+}
+
+.scene-transition-overlay.is-transitioning {
+  animation: scene-transition-out 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.scene-transition-overlay.is-entering {
+  animation: scene-transition-in 500ms cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+@keyframes scene-transition-out {
+  0% {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+  }
+}
+
+@keyframes scene-transition-in {
+  0% {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+  }
+  60% {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(4px);
+  }
+  100% {
+    opacity: 0;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+}
+
+/* Hotspot pulse animation for scene-type hotspots */
+.tour-hotspot--scene {
+  animation: hotspot-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes hotspot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4), 0 8px 20px rgba(15, 23, 42, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0), 0 8px 20px rgba(15, 23, 42, 0.2);
+  }
+}
+
+/* Direction indicator for scene hotspots */
+.tour-hotspot--scene::before {
+  height: 0;
+  width: 0;
+  border-radius: 0;
+  background: transparent;
+  border-left: 6px solid white;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  margin-left: 2px;
 }

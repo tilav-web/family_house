@@ -50,6 +50,14 @@ export interface PanoramaScene {
   isDefault: boolean
   order: number
   isActive: boolean
+  targetForwardId?: string | null
+  targetForwardYaw?: number | null
+  targetRightId?: string | null
+  targetRightYaw?: number | null
+  targetBackId?: string | null
+  targetBackYaw?: number | null
+  targetLeftId?: string | null
+  targetLeftYaw?: number | null
   hotspots: PanoramaHotspot[]
   createdAt: string
   updatedAt: string
@@ -170,6 +178,8 @@ export interface HotelInfo {
   heroVideoMobile?: string | null
   heroText?: I18nField | null
   heroSubtext?: I18nField | null
+  latitude?: number | null
+  longitude?: number | null
 }
 
 export interface LoginResponse {

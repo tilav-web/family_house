@@ -13,7 +13,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Public } from '../common/decorators/public.decorator';
-import { createImageUploadOptions } from '../common/storage/upload.util';
+import {
+  createImageUploadOptions,
+  createPanoramaUploadOptions,
+} from '../common/storage/upload.util';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
@@ -121,7 +124,7 @@ export class RoomsController {
 
   @Post('admin/:id/scenes/:sceneId/panorama')
   @UseInterceptors(
-    FileInterceptor('file', createImageUploadOptions('panoramas')),
+    FileInterceptor('file', createPanoramaUploadOptions('panoramas')),
   )
   async uploadScenePanorama(
     @Param('id') id: string,

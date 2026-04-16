@@ -18,7 +18,7 @@ export default function AdminRoomsPage() {
     queryFn: () => roomsService.findAllAdmin(),
   })
 
-  const { mutate: deleteRoom } = useMutation({
+  const { mutate: deleteRoom, isPending: deletingRoom } = useMutation({
     mutationFn: (id: string) => roomsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'rooms'] })
@@ -79,9 +79,10 @@ export default function AdminRoomsPage() {
                 <Button
                   variant="destructive"
                   size="sm"
+                  disabled={deletingRoom}
                   onClick={() => deleteRoom(room.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deletingRoom ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Trash2 className="h-4 w-4" />}
                 </Button>
               </div>
             </CardHeader>

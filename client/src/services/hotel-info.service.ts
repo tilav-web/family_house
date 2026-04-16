@@ -3,7 +3,7 @@ import type { HotelInfo } from '../types'
 
 type HotelInfoPayload = Pick<
   HotelInfo,
-  'description' | 'heroText' | 'heroSubtext'
+  'description' | 'heroText' | 'heroSubtext' | 'latitude' | 'longitude'
 >
 
 export const hotelInfoService = {

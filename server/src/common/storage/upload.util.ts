@@ -12,6 +12,8 @@ const IMAGE_MIME_TYPES = new Set([
   'image/jpg',
 ]);
 
+const PANORAMA_EXTRA_MIME_TYPES = new Set(['application/octet-stream']);
+
 const VIDEO_MIME_TYPES = new Set([
   'video/mp4',
   'video/webm',
@@ -63,6 +65,40 @@ export function createImageUploadOptions(folder = 'images'): MulterOptions {
     fileFilter: createFileFilter(IMAGE_MIME_TYPES),
     limits: {
       fileSize: 15 * 1024 * 1024,
+    },
+  };
+}
+
+export function createPanoramaUploadOptions(
+  folder = 'panoramas',
+): MulterOptions {
+  const panoramaFileFilter = (
+    _req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
+    if (IMAGE_MIME_TYPES.has(file.mimetype)) {
+      callback(null, true);
+      return;
+    }
+
+    const ext = extname(file.originalname || '').toLowerCase();
+    if (PANORAMA_EXTRA_MIME_TYPES.has(file.mimetype) && ext === '.insp') {
+      callback(null, true);
+      return;
+    }
+
+    callback(
+      new BadRequestException(`Unsupported file type: ${file.mimetype}`),
+      false,
+    );
+  };
+
+  return {
+    storage: createStorage(folder),
+    fileFilter: panoramaFileFilter,
+    limits: {
+      fileSize: 60 * 1024 * 1024,
     },
   };
 }

@@ -8,6 +8,7 @@
     "testimonials": "Testimonials",
     "videos": "Videos",
     "contact": "Contact",
+    "location": "Location",
     "admin": "Admin"
   },
   "hero": {
@@ -82,7 +83,19 @@
     "emailLabel": "Email",
     "emailAddress": "info@familyhouse.uz",
     "addressLabel": "Address",
-    "address": "Tashkent, Chilanzar district"
+    "address": "Karshi city, Kashkadarya region"
+  },
+  "location": {
+    "title": "Our Location",
+    "label": "Location",
+    "subtitle": "Our hotel is conveniently located — easy to find and comfortable to reach",
+    "badge": "Karshi",
+    "addressTitle": "Address",
+    "hoursTitle": "Working Hours",
+    "hoursValue": "24 hours, 7 days a week",
+    "landmarkTitle": "Landmark",
+    "landmarkValue": "Karshi city center",
+    "openMaps": "Open in Maps"
   },
   "footer": {
     "description": "Family hotel — for your comfort and relaxation.",

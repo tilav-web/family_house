@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Maximize2, Minimize2 } from 'lucide-react'
 import 'pannellum/build/pannellum.css'
@@ -14,6 +14,9 @@ type PannellumViewer = {
   getScene: () => string
   mouseEventToCoords: (event: MouseEvent) => [number, number]
 }
+
+const TRANSITION_OUT_MS = 400
+const TRANSITION_IN_MS = 500
 
 type PannellumConfig = {
   default: {
@@ -43,6 +46,7 @@ interface Tour360ViewerProps {
   onSceneChange?: (sceneId: string) => void
   onCoordinateSelect?: (coords: { pitch: number; yaw: number; sceneId: string }) => void
   heightClassName?: string
+  showThumbnails?: boolean
 }
 
 function createTooltip(
@@ -63,12 +67,15 @@ export function Tour360Viewer({
   onSceneChange,
   onCoordinateSelect,
   heightClassName = 'h-[420px]',
+  showThumbnails = true,
 }: Tour360ViewerProps) {
   const { i18n } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<PannellumViewer | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [activeSceneId, setActiveSceneId] = useState<string | null>(initialSceneId ?? null)
+  const [transitionPhase, setTransitionPhase] = useState<'idle' | 'out' | 'in'>('idle')
+  const transitionRef = useRef(false)
 
   const availableScenes = useMemo(
     () =>
@@ -83,7 +90,6 @@ export function Tour360Viewer({
     if (initialSceneId && availableScenes.some((scene) => scene.id === initialSceneId)) {
       return initialSceneId
     }
-
     return availableScenes.find((scene) => scene.isDefault)?.id ?? availableScenes[0].id
   }, [availableScenes, initialSceneId])
 
@@ -95,6 +101,29 @@ export function Tour360Viewer({
   useEffect(() => {
     setActiveSceneId(startingSceneId)
   }, [startingSceneId])
+
+  const smoothLoadScene = useCallback((sceneId: string) => {
+    if (transitionRef.current || !viewerRef.current) return
+    if (viewerRef.current.getScene() === sceneId) return
+
+    transitionRef.current = true
+    setTransitionPhase('out')
+
+    setTimeout(() => {
+      viewerRef.current?.loadScene(sceneId)
+      setTransitionPhase('in')
+
+      setTimeout(() => {
+        setTransitionPhase('idle')
+        transitionRef.current = false
+      }, TRANSITION_IN_MS)
+    }, TRANSITION_OUT_MS)
+  }, [])
+
+  const handleSceneSelect = (sceneId: string) => {
+    smoothLoadScene(sceneId)
+    setActiveSceneId(sceneId)
+  }
 
   useEffect(() => {
     if (!containerRef.current || !startingSceneId || !availableScenes.length) {
@@ -129,7 +158,7 @@ export function Tour360Viewer({
         default: {
           firstScene: startingSceneId,
           autoLoad: true,
-          sceneFadeDuration: 350,
+          sceneFadeDuration: 0,
           showControls: true,
           showZoomCtrl: true,
           showFullscreenCtrl: false,
@@ -155,7 +184,6 @@ export function Tour360Viewer({
                     pitch: hotspot.pitch,
                     yaw: hotspot.yaw,
                     text: label,
-                    cssClass: 'tour-hotspot',
                     createTooltipFunc: createTooltip,
                     createTooltipArgs: {
                       label,
@@ -166,11 +194,11 @@ export function Tour360Viewer({
                   if (hotspot.type === 'scene' && hotspot.targetSceneId) {
                     return {
                       ...baseHotspot,
-                      type: 'scene',
-                      sceneId: hotspot.targetSceneId,
-                      targetPitch: hotspot.targetPitch ?? 'same',
-                      targetYaw: hotspot.targetYaw ?? 'same',
-                      targetHfov: hotspot.targetHfov ?? 'same',
+                      type: 'info',
+                      clickHandlerFunc: () => {
+                        smoothLoadScene(hotspot.targetSceneId!)
+                      },
+                      clickHandlerArgs: {},
                     }
                   }
 
@@ -203,21 +231,13 @@ export function Tour360Viewer({
       viewerRef.current?.destroy()
       viewerRef.current = null
     }
-  }, [availableScenes, i18n.language, onCoordinateSelect, onSceneChange, startingSceneId])
+  }, [availableScenes, i18n.language, onCoordinateSelect, onSceneChange, smoothLoadScene, startingSceneId])
 
   useEffect(() => {
-    const handleResize = () => {
-      viewerRef.current?.resize()
-    }
-
+    const handleResize = () => viewerRef.current?.resize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
-
-  const handleSceneSelect = (sceneId: string) => {
-    viewerRef.current?.loadScene(sceneId)
-    setActiveSceneId(sceneId)
-  }
 
   if (!availableScenes.length) {
     return (
@@ -228,11 +248,17 @@ export function Tour360Viewer({
   }
 
   return (
-    <div
-      className={`relative space-y-4 ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-4' : ''}`}
-    >
+    <div className={`relative space-y-4 ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-4' : ''}`}>
       <div className={`relative overflow-hidden rounded-lg ${heightClassName}`}>
-        <div ref={containerRef} className="h-full w-full" />
+        <div ref={containerRef} className={`h-full w-full ${onCoordinateSelect ? 'cursor-crosshair' : ''}`} />
+
+        {/* Scene transition overlay */}
+        <div
+          className={`scene-transition-overlay ${
+            transitionPhase === 'out' ? 'is-transitioning' :
+            transitionPhase === 'in' ? 'is-entering' : ''
+          }`}
+        />
 
         <Button
           size="icon"
@@ -242,47 +268,51 @@ export function Tour360Viewer({
         >
           {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
         </Button>
+
+        {activeScene && (
+          <div className="absolute left-4 top-4 z-10 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">
+            {getLocalizedField(activeScene.title, i18n.language)}
+          </div>
+        )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {availableScenes.map((scene) => {
-          const isActiveScene = scene.id === activeScene?.id
-          const title = getLocalizedField(scene.title, i18n.language)
+      {showThumbnails && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {availableScenes.map((scene) => {
+            const isActiveScene = scene.id === activeScene?.id
+            const title = getLocalizedField(scene.title, i18n.language)
 
-          return (
-            <button
-              key={scene.id}
-              type="button"
-              onClick={() => handleSceneSelect(scene.id)}
-              className={`overflow-hidden rounded-xl border text-left transition ${
-                isActiveScene
-                  ? 'border-primary shadow-[0_18px_42px_var(--client-shadow)]'
-                  : 'border-[var(--client-line)] hover:border-primary/40'
-              }`}
-            >
-              <div className="aspect-[16/9] bg-slate-200">
-                {scene.thumbnailUrl ? (
-                  <img
-                    src={scene.thumbnailUrl}
-                    alt={title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                    Thumbnail yo'q
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1 bg-[var(--client-panel-strong)] p-4">
-                <p className="font-semibold text-foreground">{title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {scene.hotspots.length} hotspot
-                </p>
-              </div>
-            </button>
-          )
-        })}
-      </div>
+            return (
+              <button
+                key={scene.id}
+                type="button"
+                onClick={() => handleSceneSelect(scene.id)}
+                className={`overflow-hidden rounded-xl border text-left transition ${
+                  isActiveScene
+                    ? 'border-primary shadow-[0_18px_42px_var(--client-shadow)]'
+                    : 'border-[var(--client-line)] hover:border-primary/40'
+                }`}
+              >
+                <div className="aspect-[16/9] bg-slate-200">
+                  {scene.thumbnailUrl ? (
+                    <img src={scene.thumbnailUrl} alt={title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                      Thumbnail yo'q
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1 bg-[var(--client-panel-strong)] p-4">
+                  <p className="font-semibold text-foreground">{title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {scene.hotspots.length} hotspot
+                  </p>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

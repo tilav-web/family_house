@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { promises as fs } from 'fs';
+import { basename, extname, join, parse } from 'path';
 import { Repository } from 'typeorm';
 import { Room } from './entities/room.entity';
 import { RoomImage } from './entities/room-image.entity';
@@ -15,6 +17,8 @@ import { CreatePanoramaSceneDto } from './dto/create-panorama-scene.dto';
 import { UpdatePanoramaSceneDto } from './dto/update-panorama-scene.dto';
 import { CreatePanoramaHotspotDto } from './dto/create-panorama-hotspot.dto';
 import { UpdatePanoramaHotspotDto } from './dto/update-panorama-hotspot.dto';
+import { getUploadsRoot } from '../common/storage/upload.util';
+import { spawn } from 'child_process';
 
 @Injectable()
 export class RoomsService {
@@ -255,10 +259,64 @@ export class RoomsService {
     file: Express.Multer.File,
   ): Promise<PanoramaScene> {
     const scene = await this.findSceneOrThrow(roomId, sceneId);
-    scene.panoramaUrl = `/uploads/panoramas/${file.filename}`;
+    const originalExt = extname(file.originalname || file.filename).toLowerCase();
+    const uploadsRoot = getUploadsRoot();
+    const panoramaFolder = join(uploadsRoot, 'panoramas');
+    const sourcePath = file.path || join(panoramaFolder, file.filename);
 
-    if (!scene.thumbnailUrl) {
-      scene.thumbnailUrl = scene.panoramaUrl;
+    let panoramaFilename = file.filename;
+    let panoramaPath = sourcePath;
+
+    if (originalExt === '.insp') {
+      const parsed = parse(file.filename);
+      panoramaFilename = `${parsed.name}.jpg`;
+      panoramaPath = join(panoramaFolder, panoramaFilename);
+
+      await this.runFfmpeg([
+        '-y',
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-i',
+        sourcePath,
+        '-vf',
+        'v360=input=dfisheye:output=equirect:ih_fov=190:iv_fov=190:w=4096:h=2048',
+        '-frames:v',
+        '1',
+        panoramaPath,
+      ]);
+
+      await fs.unlink(sourcePath).catch(() => undefined);
+    }
+
+    scene.panoramaUrl = `/uploads/panoramas/${panoramaFilename}`;
+
+    const shouldUpdateThumbnail =
+      !scene.thumbnailUrl ||
+      scene.thumbnailUrl.startsWith('/uploads/scene-thumbnails/') ||
+      scene.thumbnailUrl === `/uploads/panoramas/${file.filename}`;
+
+    if (shouldUpdateThumbnail) {
+      const previewFilename = `${basename(panoramaFilename, '.jpg')}-preview.jpg`;
+      const previewFolder = join(uploadsRoot, 'scene-thumbnails');
+      const previewPath = join(previewFolder, previewFilename);
+
+      await fs.mkdir(previewFolder, { recursive: true });
+      await this.runFfmpeg([
+        '-y',
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-i',
+        panoramaPath,
+        '-vf',
+        'v360=input=equirect:output=flat:yaw=0:pitch=0:h_fov=105:v_fov=68:w=1600:h=900',
+        '-frames:v',
+        '1',
+        previewPath,
+      ]);
+
+      scene.thumbnailUrl = `/uploads/scene-thumbnails/${previewFilename}`;
     }
 
     await this.panoramaScenesRepository.save(scene);
@@ -344,6 +402,33 @@ export class RoomsService {
   async removeHotspot(sceneId: string, hotspotId: string): Promise<void> {
     const hotspot = await this.findHotspotOrThrow(sceneId, hotspotId);
     await this.panoramaHotspotsRepository.remove(hotspot);
+  }
+
+  private runFfmpeg(args: string[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const ffmpeg = spawn('ffmpeg', args, { stdio: 'ignore' });
+
+      ffmpeg.on('error', () => {
+        reject(
+          new BadRequestException(
+            'ffmpeg topilmadi yoki ishga tushmadi. Serverga ffmpeg o‘rnatilishi kerak.',
+          ),
+        );
+      });
+
+      ffmpeg.on('exit', (code) => {
+        if (code === 0) {
+          resolve();
+          return;
+        }
+
+        reject(
+          new BadRequestException(
+            'Panorama faylini konvert qilishda xatolik yuz berdi.',
+          ),
+        );
+      });
+    });
   }
 
   private async findOneEntityOrThrow(id: string): Promise<Room> {

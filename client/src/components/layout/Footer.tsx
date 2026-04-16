@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Phone, Mail, MapPin, Send } from 'lucide-react'
 import { Logo } from './Logo'
 
@@ -28,14 +29,22 @@ const quickLinks = [
   { href: '#rooms', key: 'nav.rooms' },
   { href: '#news', key: 'nav.news' },
   { href: '#contact', key: 'nav.contact' },
+  { href: '#location', key: 'nav.location' },
 ]
 
 export function Footer() {
   const { t } = useTranslation()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isHomePage = location.pathname === '/'
 
   const scrollTo = (href: string) => {
-    const el = document.querySelector(href)
-    el?.scrollIntoView({ behavior: 'smooth' })
+    if (isHomePage) {
+      const el = document.querySelector(href)
+      el?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/' + href)
+    }
   }
 
   return (

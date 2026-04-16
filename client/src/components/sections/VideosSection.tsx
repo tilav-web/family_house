@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, Play } from 'lucide-react'
+import { Play, X } from 'lucide-react'
 import { videosService } from '../../services/videos.service'
 import { Skeleton } from '../ui/skeleton'
 import { ScrollReveal } from '../shared/ScrollReveal'
@@ -49,10 +49,12 @@ function VideoCard({
   video,
   previewing,
   onPreviewChange,
+  onVideoClick,
 }: {
   video: VideoCardData
   previewing: boolean
   onPreviewChange: (open: boolean) => void
+  onVideoClick: (video: VideoCardData) => void
 }) {
   const caption = video.caption || 'Family House'
 
@@ -63,7 +65,7 @@ function VideoCard({
       onMouseLeave={() => onPreviewChange(false)}
       onFocus={() => onPreviewChange(true)}
       onBlur={() => onPreviewChange(false)}
-      onClick={() => video.instagramUrl && window.open(video.instagramUrl, '_blank', 'noopener,noreferrer')}
+      onClick={() => onVideoClick(video)}
       className="group mb-4 block w-full text-left"
     >
       <div className="client-panel-strong overflow-hidden rounded-lg p-2 transition-transform duration-300 group-hover:-translate-y-1">
@@ -103,7 +105,7 @@ function VideoCard({
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <div className="absolute left-3 top-3 rounded-lg border border-white/15 bg-black/25 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
-            Instagram
+            Video
           </div>
           <div className="absolute inset-x-0 bottom-0 p-4">
             <div className="flex items-end justify-between gap-3">
@@ -113,11 +115,7 @@ function VideoCard({
                 </p>
               </div>
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/16 text-white backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-                {previewing && video.previewVideoUrl ? (
-                  <ArrowUpRight className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" fill="white" />
-                )}
+                <Play className="h-4 w-4" fill="white" />
               </div>
             </div>
           </div>
@@ -133,12 +131,14 @@ function MarqueeColumn({
   direction,
   previewingId,
   onPreviewChange,
+  onVideoClick,
 }: {
   videos: VideoCardData[]
   duration: number
   direction: 'up' | 'down'
   previewingId: string | null
   onPreviewChange: (id: string | null) => void
+  onVideoClick: (video: VideoCardData) => void
 }) {
   const animationName = direction === 'up' ? 'family-marquee-up' : 'family-marquee-down'
 
@@ -160,6 +160,7 @@ function MarqueeColumn({
             video={video}
             previewing={previewingId === `${video.id}-${index}`}
             onPreviewChange={(open) => onPreviewChange(open ? `${video.id}-${index}` : null)}
+            onVideoClick={onVideoClick}
           />
         ))}
       </div>
@@ -172,6 +173,19 @@ export function VideosSection() {
   const [previewingId, setPreviewingId] = useState<string | null>(null)
   const [mobileIndex, setMobileIndex] = useState(0)
   const [mobileDirection, setMobileDirection] = useState(0)
+  const [modalVideo, setModalVideo] = useState<VideoCardData | null>(null)
+
+  const openVideoModal = (video: VideoCardData) => {
+    if (video.previewVideoUrl) {
+      setModalVideo(video)
+      document.body.style.overflow = 'hidden'
+    }
+  }
+
+  const closeVideoModal = () => {
+    setModalVideo(null)
+    document.body.style.overflow = ''
+  }
   const { data, isLoading } = useQuery({
     queryKey: ['videos'],
     queryFn: () => videosService.findAll(),
@@ -256,7 +270,7 @@ export function VideosSection() {
           </div>
 
           <div className="client-badge self-start lg:self-auto">
-            {activeVideos.length.toString().padStart(2, '0')} Insta
+            {activeVideos.length.toString().padStart(2, '0')} {t('nav.videos')}
           </div>
         </ScrollReveal>
 
@@ -284,10 +298,7 @@ export function VideosSection() {
                       paginateMobile(-1)
                     }
                   }}
-                  onClick={() =>
-                    activeMobileVideo.instagramUrl &&
-                    window.open(activeMobileVideo.instagramUrl, '_blank', 'noopener,noreferrer')
-                  }
+                  onClick={() => openVideoModal(activeMobileVideo)}
                   className="block w-full touch-pan-y text-left"
                   style={{ touchAction: 'pan-y' }}
                 >
@@ -319,7 +330,7 @@ export function VideosSection() {
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     <div className="absolute left-3 top-3 rounded-lg border border-white/15 bg-black/25 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
-                      Instagram
+                      Video
                     </div>
                     <div className="absolute inset-x-0 bottom-0 p-4">
                       <div className="flex items-end justify-between gap-3">
@@ -327,7 +338,7 @@ export function VideosSection() {
                           {activeMobileVideo.caption || t('videos.subtitle')}
                         </p>
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/16 text-white backdrop-blur-sm">
-                          <ArrowUpRight className="h-4 w-4" />
+                          <Play className="h-4 w-4" fill="white" />
                         </div>
                       </div>
                     </div>
@@ -367,11 +378,51 @@ export function VideosSection() {
                 duration={baseDuration + index * 2.8}
                 previewingId={previewingId}
                 onPreviewChange={setPreviewingId}
+                onVideoClick={openVideoModal}
               />
             ))}
           </div>
         </div>
       </div>
+
+      {/* Video modal */}
+      <AnimatePresence>
+        {modalVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95"
+            onClick={closeVideoModal}
+          >
+            <button
+              type="button"
+              onClick={closeVideoModal}
+              className="absolute right-4 top-4 z-10 rounded-full border border-white/12 bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/18"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div
+              className="relative w-full max-w-lg mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                src={modalVideo.previewVideoUrl!}
+                autoPlay
+                controls
+                playsInline
+                className="w-full rounded-lg"
+              />
+              {modalVideo.caption && (
+                <p className="mt-3 text-center text-sm text-white/80">
+                  {modalVideo.caption}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         @keyframes family-marquee-up {

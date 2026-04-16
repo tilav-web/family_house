@@ -1,0 +1,20 @@
+{
+  "name": "Family House — Oilaviy Mehmonxona",
+  "short_name": "Family House",
+  "description": "Qarshi shahrida joylashgan zamonaviy oilaviy mehmonxona",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1efec",
+  "theme_color": "#dcb108",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "lang": "uz",
+  "categories": ["travel", "hotel"]
+}

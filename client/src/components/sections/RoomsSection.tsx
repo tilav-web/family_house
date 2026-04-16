@@ -15,10 +15,13 @@ export function RoomsSection() {
     queryFn: () => roomsService.findAll(),
   })
 
+  const MAX_ROOMS_ON_HOME = 6
   const rooms = Array.isArray(data) ? data : []
-  const activeRooms = rooms
+  const allActiveRooms = rooms
     .filter((room) => room.isActive)
     .sort((left, right) => left.order - right.order)
+  const activeRooms = allActiveRooms.slice(0, MAX_ROOMS_ON_HOME)
+  const hasMoreRooms = allActiveRooms.length > MAX_ROOMS_ON_HOME
 
   if (isLoading) {
     return (
@@ -55,7 +58,7 @@ export function RoomsSection() {
           </div>
 
           <div className="client-badge self-start lg:self-auto">
-            {activeRooms.length.toString().padStart(2, '0')} {t('nav.rooms')}
+            {allActiveRooms.length.toString().padStart(2, '0')} {t('nav.rooms')}
           </div>
         </ScrollReveal>
 
@@ -141,6 +144,14 @@ export function RoomsSection() {
             )
           })}
         </StaggerContainer>
+
+        {hasMoreRooms && (
+          <ScrollReveal className="mt-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              +{allActiveRooms.length - MAX_ROOMS_ON_HOME} {t('nav.rooms')}
+            </p>
+          </ScrollReveal>
+        )}
       </div>
     </section>
   )

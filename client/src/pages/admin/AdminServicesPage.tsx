@@ -92,7 +92,7 @@ export default function AdminServicesPage() {
     },
   })
 
-  const { mutate: deleteService } = useMutation({
+  const { mutate: deleteService, isPending: deletingService } = useMutation({
     mutationFn: (id: string) => servicesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'services'] })
@@ -232,9 +232,10 @@ export default function AdminServicesPage() {
                 <Button
                   variant="destructive"
                   size="sm"
+                  disabled={deletingService}
                   onClick={() => deleteService(service.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deletingService ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Trash2 className="h-4 w-4" />}
                 </Button>
               </div>
             </CardHeader>

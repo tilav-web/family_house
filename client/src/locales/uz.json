@@ -8,6 +8,7 @@
     "testimonials": "Fikrlar",
     "videos": "Videolar",
     "contact": "Aloqa",
+    "location": "Joylashuv",
     "admin": "Admin"
   },
   "hero": {
@@ -82,7 +83,19 @@
     "emailLabel": "Email",
     "emailAddress": "info@familyhouse.uz",
     "addressLabel": "Manzil",
-    "address": "Toshkent sh., Chilonzor tumani"
+    "address": "Qarshi shahri, Qashqadaryo viloyati"
+  },
+  "location": {
+    "title": "Bizning manzil",
+    "label": "Joylashuv",
+    "subtitle": "Mehmonxonamiz qulaylashtirilgan joyda joylashgan — oson topish va qulay yetib kelish uchun",
+    "badge": "Qarshi",
+    "addressTitle": "Manzil",
+    "hoursTitle": "Ish vaqti",
+    "hoursValue": "24 soat, haftaning 7 kuni",
+    "landmarkTitle": "Mo'ljal",
+    "landmarkValue": "Qarshi shahri markazi",
+    "openMaps": "Xaritada ochish"
   },
   "footer": {
     "description": "Oilaviy mehmonxona — sizning qulayligingiz va dam olishingiz uchun.",
