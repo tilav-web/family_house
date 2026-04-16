@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -39,5 +39,41 @@ export class AuthService {
 
   async getMe(adminId: string) {
     return this.adminRepository.findOne({ where: { id: adminId } });
+  }
+
+  async changeCredentials(
+    adminId: string,
+    currentPassword: string,
+    newUsername?: string,
+    newPassword?: string,
+  ) {
+    const admin = await this.adminRepository.findOne({ where: { id: adminId } });
+    if (!admin) {
+      throw new BadRequestException('Admin topilmadi');
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, admin.passwordHash);
+    if (!isValid) {
+      throw new BadRequestException('Joriy parol noto\'g\'ri');
+    }
+
+    if (newUsername) {
+      const existing = await this.adminRepository.findOne({
+        where: { username: newUsername },
+      });
+      if (existing && existing.id !== adminId) {
+        throw new BadRequestException('Bu username allaqachon band');
+      }
+      admin.username = newUsername;
+    }
+
+    if (newPassword) {
+      admin.passwordHash = await bcrypt.hash(newPassword, 10);
+    }
+
+    await this.adminRepository.save(admin);
+
+    // Yangi token qaytarish (username o'zgargan bo'lishi mumkin)
+    return this.login(admin);
   }
 }

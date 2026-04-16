@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Request,
   UnauthorizedException,
@@ -9,6 +10,7 @@ import {
 import type { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangeCredentialsDto } from './dto/change-credentials.dto';
 import { Public } from '../common/decorators/public.decorator';
 
 interface AuthenticatedRequest extends ExpressRequest {
@@ -38,5 +40,18 @@ export class AuthController {
   @Get('me')
   async getMe(@Request() req: AuthenticatedRequest) {
     return this.authService.getMe(req.user.id);
+  }
+
+  @Patch('change-credentials')
+  async changeCredentials(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ChangeCredentialsDto,
+  ) {
+    return this.authService.changeCredentials(
+      req.user.id,
+      dto.currentPassword,
+      dto.newUsername,
+      dto.newPassword,
+    );
   }
 }

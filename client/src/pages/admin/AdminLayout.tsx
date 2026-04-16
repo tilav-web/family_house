@@ -14,6 +14,7 @@ import {
   X,
   House,
   LogOut,
+  Shield,
 } from 'lucide-react'
 import { authService } from '../../services/auth.service'
 
@@ -26,6 +27,7 @@ const navItems = [
   { icon: Video, label: 'Videos', href: '/admin/videos' },
   { icon: Mail, label: 'Contacts', href: '/admin/contacts' },
   { icon: Info, label: 'Hotel Info', href: '/admin/hotel-info' },
+  { icon: Shield, label: 'Sozlamalar', href: '/admin/settings' },
 ]
 
 export default function AdminLayout() {

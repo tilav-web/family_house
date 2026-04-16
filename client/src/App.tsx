@@ -19,6 +19,7 @@ const AdminTestimonialsPage = lazy(() => import('./pages/admin/AdminTestimonials
 const AdminVideosPage = lazy(() => import('./pages/admin/AdminVideosPage'))
 const AdminContactsPage = lazy(() => import('./pages/admin/AdminContactsPage'))
 const AdminHotelInfoPage = lazy(() => import('./pages/admin/AdminHotelInfoPage'))
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'))
 
 function AdminFallback() {
   return (
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="videos" element={<AdminVideosPage />} />
         <Route path="contacts" element={<AdminContactsPage />} />
         <Route path="hotel-info" element={<AdminHotelInfoPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
 
       {/* Catch-all */}
