@@ -46,19 +46,6 @@ services:
     networks:
       - app-network
 
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: family-house-client
-    restart: unless-stopped
-    ports:
-      - "5173:5173"
-    depends_on:
-      - server
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
