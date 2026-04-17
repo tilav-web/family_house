@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { servicesService } from '../../services/services.service'
+import { EmptyState } from '../../components/admin/EmptyState'
 import type { Service } from '../../types'
 import { Button } from '../../components/ui/button'
 import { Card, CardHeader, CardTitle } from '../../components/ui/card'
@@ -210,6 +211,9 @@ export default function AdminServicesPage() {
         </Dialog>
       </div>
 
+      {services.length === 0 ? (
+        <EmptyState title="Hozircha xizmatlar yo'q" description="Yangi xizmat qo'shish uchun yuqoridagi tugmani bosing" />
+      ) : (
       <div className="grid gap-4">
         {services.map((service) => (
           <Card key={service.id}>
@@ -242,6 +246,7 @@ export default function AdminServicesPage() {
           </Card>
         ))}
       </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { roomsService } from '../../services/rooms.service'
+import { EmptyState } from '../../components/admin/EmptyState'
 import { Button } from '../../components/ui/button'
 import { Card, CardHeader, CardTitle } from '../../components/ui/card'
 import { Skeleton } from '../../components/ui/skeleton'
@@ -50,6 +51,9 @@ export default function AdminRoomsPage() {
         </Button>
       </div>
 
+      {rooms.length === 0 ? (
+        <EmptyState title="Hozircha xonalar yo'q" description="Yangi xona qo'shish uchun yuqoridagi tugmani bosing" />
+      ) : (
       <div className="grid gap-4">
         {rooms.map((room) => (
           <Card key={room.id}>
@@ -89,6 +93,7 @@ export default function AdminRoomsPage() {
           </Card>
         ))}
       </div>
+      )}
     </div>
   )
 }

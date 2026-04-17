@@ -37,6 +37,8 @@ export function ServicesSection() {
     )
   }
 
+  if (activeServices.length === 0) return null
+
   return (
     <section id="services" className="client-section overflow-hidden py-24 lg:py-32">
       <div className="client-grid" />

@@ -178,8 +178,10 @@ export interface HotelInfo {
   heroVideoMobile?: string | null
   heroText?: I18nField | null
   heroSubtext?: I18nField | null
+  phoneNumber?: string | null
   latitude?: number | null
   longitude?: number | null
+  mapEmbedUrl?: string | null
 }
 
 export interface LoginResponse {

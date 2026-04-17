@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Phone } from 'lucide-react'
 import { Logo } from './Logo'
+import { hotelInfoService } from '../../services/hotel-info.service'
+import { PaletteToggle, type ClientThemeMode } from '../shared/PaletteToggle'
 
 const navLinks = [
   { href: '#about', key: 'nav.about' },
@@ -14,19 +17,31 @@ const navLinks = [
   { href: '#location', key: 'nav.location' },
 ]
 
-export function Header() {
+interface HeaderProps {
+  palette?: ClientThemeMode
+  onTogglePalette?: () => void
+}
+
+export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
   const { t, i18n } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const [scrolled, setScrolled] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const isHomePage = location.pathname === '/'
+  const [scrolled, setScrolled] = useState(!isHomePage)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const { data: hotelInfo } = useQuery({
+    queryKey: ['hotelInfo'],
+    queryFn: () => hotelInfoService.getInfo(),
+  })
+  const phoneNumber = hotelInfo?.phoneNumber || t('contact.phoneNumber')
 
   useEffect(() => {
+    if (!isHomePage) return
     const onScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [isHomePage])
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -34,9 +49,13 @@ export function Header() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
-  // Detail sahifalarda header doim scrolled ko'rinishda
+  // Sahifa o'zgarganda — detail sahifalarda doim scrolled, home da scroll holatiga moslashadi
   useEffect(() => {
-    if (!isHomePage) setScrolled(true)
+    if (!isHomePage) {
+      setScrolled(true)
+    } else {
+      setScrolled(window.scrollY > 50)
+    }
   }, [isHomePage])
 
   const scrollTo = (href: string) => {
@@ -57,9 +76,11 @@ export function Header() {
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-          scrolled
-            ? 'border-b client-divider bg-background/80 shadow-[0_18px_42px_var(--client-shadow)] backdrop-blur-xl'
-            : 'bg-transparent'
+          !isHomePage
+            ? 'border-b client-divider bg-background shadow-[0_18px_42px_var(--client-shadow)]'
+            : scrolled
+              ? 'border-b client-divider bg-background/80 shadow-[0_18px_42px_var(--client-shadow)] backdrop-blur-xl'
+              : 'bg-transparent'
         }`}
       >
         <div className="container mx-auto px-4 lg:px-8">
@@ -70,7 +91,7 @@ export function Header() {
               onClick={(e) => { e.preventDefault(); isHomePage ? scrollTo('#hero') : navigate('/') }}
               className="flex items-center gap-2 group"
             >
-              <Logo />
+              <Logo white={!scrolled} />
               <span className={`text-xl font-bold tracking-tight transition-colors ${
                 scrolled ? 'text-foreground' : 'text-white'
               }`}>
@@ -85,17 +106,45 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   onClick={(e) => { e.preventDefault(); scrollTo(link.href) }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-primary/10 hover:text-primary ${
-                    scrolled ? 'text-foreground' : 'text-white/90 hover:text-white'
+                  className={`group relative px-4 py-2 text-sm font-medium transition-colors ${
+                    scrolled ? 'text-foreground hover:text-primary' : 'text-white/90 hover:text-white'
                   }`}
                 >
                   {t(link.key)}
+                  <span
+                    className={`pointer-events-none absolute bottom-1 left-4 right-4 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
+                      scrolled ? 'bg-primary' : 'bg-white'
+                    }`}
+                  />
                 </a>
               ))}
             </nav>
 
-            {/* Language + Mobile toggle */}
+            {/* Phone + Language + Mobile toggle */}
             <div className="flex items-center gap-2">
+              {/* Phone call button */}
+              <a
+                href={`tel:${phoneNumber.replace(/\s/g, '')}`}
+                aria-label={phoneNumber}
+                className={`group hidden sm:flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-all ${
+                  scrolled
+                    ? 'border-[var(--client-line)] bg-background/80 text-foreground hover:border-primary hover:text-primary'
+                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+                } backdrop-blur-md`}
+              >
+                <Phone className="h-4 w-4 transition-transform group-hover:animate-phone-ring" />
+                <span className="text-xs font-semibold tracking-wide">{phoneNumber}</span>
+              </a>
+
+              {/* Theme toggle (Sun/Moon) */}
+              {palette && onTogglePalette && (
+                <PaletteToggle
+                  palette={palette}
+                  onToggle={onTogglePalette}
+                  white={!scrolled}
+                />
+              )}
+
               {/* Language switcher */}
               <div className={`hidden sm:flex items-center rounded-lg border p-0.5 ${
                 scrolled

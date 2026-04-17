@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { testimonialsService } from '../../services/testimonials.service'
+import { EmptyState } from '../../components/admin/EmptyState'
 import type { Testimonial } from '../../types'
 import { Button } from '../../components/ui/button'
 import { Card, CardHeader, CardTitle } from '../../components/ui/card'
@@ -281,6 +282,9 @@ export default function AdminTestimonialsPage() {
       </div>
 
       {/* Testimonials list */}
+      {(Array.isArray(testimonials) ? testimonials : []).length === 0 ? (
+        <EmptyState title="Hozircha fikrlar yo'q" description="Yangi mehmon fikrini qo'shish uchun yuqoridagi tugmani bosing" />
+      ) : (
       <div className="grid gap-4">
         {(Array.isArray(testimonials) ? testimonials : []).map((testimonial) => (
           <Card key={testimonial.id}>
@@ -343,6 +347,7 @@ export default function AdminTestimonialsPage() {
           </Card>
         ))}
       </div>
+      )}
     </div>
   )
 }

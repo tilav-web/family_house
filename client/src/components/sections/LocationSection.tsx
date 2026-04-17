@@ -5,12 +5,13 @@ import { hotelInfoService } from '../../services/hotel-info.service'
 import { ScrollReveal } from '../shared/ScrollReveal'
 import { Skeleton } from '../ui/skeleton'
 
-// Standart koordinatalar (Qarshi) — API dan kelmaguncha ishlatiladi
-const DEFAULT_LAT = 38.8606
-const DEFAULT_LNG = 65.8008
-
-function buildGoogleMapsEmbedUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3100!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z!5e0!3m2!1suz!2suz!4v1700000000000`
+// Iframe HTML dan src URL ni ajratish (admin to'liq iframe kiritishi mumkin)
+function extractIframeSrc(input?: string | null): string {
+  if (!input) return ''
+  const trimmed = input.trim()
+  const match = trimmed.match(/src=["']([^"']+)["']/i)
+  if (match) return match[1]
+  return trimmed
 }
 
 export function LocationSection() {
@@ -21,9 +22,11 @@ export function LocationSection() {
     queryFn: () => hotelInfoService.getInfo(),
   })
 
-  const lat = hotelInfo?.latitude ?? DEFAULT_LAT
-  const lng = hotelInfo?.longitude ?? DEFAULT_LNG
-  const hasCoords = lat !== 0 && lng !== 0
+  const mapUrl = extractIframeSrc(hotelInfo?.mapEmbedUrl)
+  const lat = hotelInfo?.latitude
+  const lng = hotelInfo?.longitude
+  const hasMap = !!mapUrl
+  const hasCoords = !!(lat && lng)
 
   return (
     <section id="location" className="client-section overflow-hidden py-24 lg:py-32">
@@ -52,9 +55,9 @@ export function LocationSection() {
             <div className="client-panel-strong overflow-hidden rounded-lg p-2">
               {isLoading ? (
                 <Skeleton className="h-[450px] w-full rounded-lg" />
-              ) : hasCoords ? (
+              ) : hasMap ? (
                 <iframe
-                  src={buildGoogleMapsEmbedUrl(lat, lng)}
+                  src={mapUrl}
                   title={t('location.title')}
                   width="100%"
                   height="450"
@@ -117,9 +120,11 @@ export function LocationSection() {
               </div>
             </div>
 
-            {hasCoords && (
+            {(hasCoords || hasMap) && (
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                href={hasCoords
+                  ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+                  : mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="client-panel-strong flex items-center justify-center gap-2 rounded-lg p-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"

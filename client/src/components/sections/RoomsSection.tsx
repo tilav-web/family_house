@@ -41,6 +41,8 @@ export function RoomsSection() {
     )
   }
 
+  if (allActiveRooms.length === 0) return null
+
   return (
     <section id="rooms" className="client-section overflow-hidden py-24 lg:py-32">
       <div className="client-grid" />

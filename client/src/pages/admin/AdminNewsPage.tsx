@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { newsService } from '../../services/news.service'
+import { EmptyState } from '../../components/admin/EmptyState'
 import { Button } from '../../components/ui/button'
 import { Card, CardHeader, CardTitle } from '../../components/ui/card'
 import { Skeleton } from '../../components/ui/skeleton'
@@ -51,6 +52,9 @@ export default function AdminNewsPage() {
         </Button>
       </div>
 
+      {news.length === 0 ? (
+        <EmptyState title="Hozircha yangiliklar yo'q" description="Yangi yangilik qo'shish uchun yuqoridagi tugmani bosing" />
+      ) : (
       <div className="grid gap-4">
         {news.map((item) => (
           <Card key={item.id}>
@@ -78,6 +82,7 @@ export default function AdminNewsPage() {
           </Card>
         ))}
       </div>
+      )}
     </div>
   )
 }

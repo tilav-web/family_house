@@ -21,6 +21,8 @@ interface HotelInfoFormValues {
   uz_heroSubtext: string
   ru_heroSubtext: string
   en_heroSubtext: string
+  phoneNumber: string
+  mapEmbedUrl: string
   latitude: string
   longitude: string
 }
@@ -35,6 +37,8 @@ const defaultValues: HotelInfoFormValues = {
   uz_heroSubtext: '',
   ru_heroSubtext: '',
   en_heroSubtext: '',
+  phoneNumber: '',
+  mapEmbedUrl: '',
   latitude: '',
   longitude: '',
 }
@@ -54,13 +58,22 @@ function toFormValues(hotelInfo?: HotelInfo | null): HotelInfoFormValues {
     uz_heroSubtext: hotelInfo.heroSubtext?.uz ?? '',
     ru_heroSubtext: hotelInfo.heroSubtext?.ru ?? '',
     en_heroSubtext: hotelInfo.heroSubtext?.en ?? '',
+    phoneNumber: hotelInfo.phoneNumber ?? '',
+    mapEmbedUrl: hotelInfo.mapEmbedUrl ?? '',
     latitude: hotelInfo.latitude?.toString() ?? '',
     longitude: hotelInfo.longitude?.toString() ?? '',
   }
 }
 
-function buildGoogleMapsEmbedUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3100!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z!5e0!3m2!1suz!2suz!4v1700000000000`
+// Iframe HTML dan src URL ni ajratib olish. Foydalanuvchi to'liq iframe yoki URL kiritishi mumkin.
+function extractIframeSrc(input: string): string {
+  const trimmed = input.trim()
+  if (!trimmed) return ''
+  // Agar <iframe ...> ko'rinishida bo'lsa — src atributini ajratamiz
+  const match = trimmed.match(/src=["']([^"']+)["']/i)
+  if (match) return match[1]
+  // Aks holda URL deb hisoblaymiz
+  return trimmed
 }
 
 export default function AdminHotelInfoPage() {
@@ -110,6 +123,8 @@ export default function AdminHotelInfoPage() {
           ru: data.ru_heroSubtext,
           en: data.en_heroSubtext,
         },
+        phoneNumber: data.phoneNumber || undefined,
+        mapEmbedUrl: data.mapEmbedUrl ? extractIframeSrc(data.mapEmbedUrl) : undefined,
         latitude: isNaN(lat) ? undefined : lat,
         longitude: isNaN(lng) ? undefined : lng,
       })
@@ -193,49 +208,54 @@ export default function AdminHotelInfoPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Xarita koordinatalari */}
+        {/* Aloqa ma'lumotlari */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold">Aloqa ma'lumotlari</h2>
+          <div>
+            <label className="mb-2 block text-sm font-medium">Telefon raqam</label>
+            <Input
+              {...register('phoneNumber')}
+              placeholder="+998 90 123 45 67"
+              type="tel"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Saytning header va footer qismida ko'rsatiladi
+            </p>
+          </div>
+        </div>
+
+        {/* Xarita (Google Maps iframe) */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <MapPin className="h-5 w-5 text-blue-600" />
             <h2 className="text-lg font-semibold">Joylashuv (Xarita)</h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium">Latitude (kenglik)</label>
-              <Input
-                {...register('latitude')}
-                type="number"
-                step="any"
-                placeholder="38.8606"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Masalan: 38.8606
-              </p>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium">Longitude (uzunlik)</label>
-              <Input
-                {...register('longitude')}
-                type="number"
-                step="any"
-                placeholder="65.8008"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Masalan: 65.8008
-              </p>
+          <div>
+            <label className="mb-2 block text-sm font-medium">Google Maps iframe / URL</label>
+            <Textarea
+              {...register('mapEmbedUrl')}
+              rows={4}
+              placeholder={`<iframe src="https://www.google.com/maps/embed?pb=..." ...></iframe>`}
+              className="font-mono text-xs"
+            />
+            <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800">
+              <strong>Qanday olish:</strong>
+              <ol className="mt-1 ml-4 list-decimal space-y-0.5">
+                <li>Google Maps da mehmonxonani toping</li>
+                <li>"Share" / "Ulashish" tugmasini bosing</li>
+                <li>"Embed a map" / "Xaritani joylash" tabini tanlang</li>
+                <li>HTML kodni nusxalang va shu yerga joylang</li>
+              </ol>
             </div>
           </div>
 
-          <p className="mt-3 text-xs text-muted-foreground">
-            Google Maps dan koordinatalarni olish: xaritada mehmonxonani toping, o'ng tugma bosing va koordinatalarni nusxalang.
-          </p>
-
           {/* Xarita preview */}
-          {hasValidCoords && (
+          {watch('mapEmbedUrl') && (
             <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
+              <p className="bg-slate-50 px-3 py-1.5 text-xs font-medium text-muted-foreground">Preview:</p>
               <iframe
-                src={buildGoogleMapsEmbedUrl(previewLat, previewLng)}
+                src={extractIframeSrc(watch('mapEmbedUrl'))}
                 title="Map preview"
                 width="100%"
                 height="300"
@@ -245,6 +265,31 @@ export default function AdminHotelInfoPage() {
               />
             </div>
           )}
+
+          {/* SEO uchun koordinatalar (ixtiyoriy) */}
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
+              SEO uchun koordinatalar (ixtiyoriy)
+            </summary>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium">Latitude</label>
+                <Input {...register('latitude')} type="number" step="any" placeholder="38.8606" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium">Longitude</label>
+                <Input {...register('longitude')} type="number" step="any" placeholder="65.8008" />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Qidiruv tizimlari (Google) uchun ishlatiladi — JSON-LD strukturali ma'lumotlarda
+            </p>
+            {hasValidCoords && (
+              <p className="mt-1 text-xs text-green-600">
+                ✓ Koordinatalar kiritilgan: {previewLat}, {previewLng}
+              </p>
+            )}
+          </details>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">

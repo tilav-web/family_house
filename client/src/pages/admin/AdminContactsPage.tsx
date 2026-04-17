@@ -4,7 +4,7 @@ import { contactsService } from '../../services/contacts.service'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Skeleton } from '../../components/ui/skeleton'
-import { Trash2, MessageSquare } from 'lucide-react'
+import { Trash2, MessageSquare, Mail } from 'lucide-react'
 import { useToast } from '../../components/ui/use-toast'
 
 export default function AdminContactsPage() {
@@ -50,6 +50,13 @@ export default function AdminContactsPage() {
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-8">Contacts</h1>
 
+      {contacts.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center text-muted-foreground">
+          <Mail className="mx-auto mb-3 h-12 w-12 opacity-40" />
+          <p className="font-medium">Hozircha xabarlar yo'q</p>
+          <p className="text-sm mt-1">Mehmonlar yuborgan xabarlar shu yerda paydo bo'ladi</p>
+        </div>
+      ) : (
       <div className="grid gap-4">
         {contacts.map((contact) => (
           <Card key={contact.id} className={!contact.isRead ? 'border-primary' : ''}>
@@ -91,6 +98,7 @@ export default function AdminContactsPage() {
           </Card>
         ))}
       </div>
+      )}
 
       {contactsData && contactsData.total > 20 && (
         <div className="flex justify-center gap-4 mt-8">

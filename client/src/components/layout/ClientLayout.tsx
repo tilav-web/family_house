@@ -4,10 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { Toaster } from '../ui/toaster'
-import {
-  PaletteToggle,
-  type ClientThemeMode,
-} from '../shared/PaletteToggle'
+import { ScrollToTop } from '../ScrollToTop'
+import type { ClientThemeMode } from '../shared/PaletteToggle'
 
 const CLIENT_THEME_STORAGE_KEY = 'family-house-client-theme'
 
@@ -40,16 +38,16 @@ export default function ClientLayout() {
 
   return (
     <div data-client-theme={palette} className="client-shell relative">
+      <ScrollToTop />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-lg"
       >
         Asosiy kontentga o'tish
       </a>
-      <Header />
-      <PaletteToggle
+      <Header
         palette={palette}
-        onToggle={() => setPalette((current) => (current === 'gold' ? 'midnight' : 'gold'))}
+        onTogglePalette={() => setPalette((current) => (current === 'gold' ? 'midnight' : 'gold'))}
       />
       <Outlet />
       <Toaster />

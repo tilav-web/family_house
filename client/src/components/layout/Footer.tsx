@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Phone, Mail, MapPin, Send } from 'lucide-react'
 import { Logo } from './Logo'
+import { hotelInfoService } from '../../services/hotel-info.service'
 
 const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -38,6 +40,12 @@ export function Footer() {
   const navigate = useNavigate()
   const isHomePage = location.pathname === '/'
 
+  const { data: hotelInfo } = useQuery({
+    queryKey: ['hotelInfo'],
+    queryFn: () => hotelInfoService.getInfo(),
+  })
+  const phoneNumber = hotelInfo?.phoneNumber || t('contact.phoneNumber')
+
   const scrollTo = (href: string) => {
     if (isHomePage) {
       const el = document.querySelector(href)
@@ -53,7 +61,7 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <Logo />
+              <Logo white />
               <span className="text-xl font-bold text-white tracking-tight">Family House</span>
             </div>
             <p className="mb-6 text-sm leading-relaxed text-white/62">
@@ -105,8 +113,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-primary shrink-0" />
-                <a href={`tel:${t('contact.phoneNumber').replace(/\s/g, '')}`} className="text-sm text-white/62 transition-colors hover:text-white">
-                  {t('contact.phoneNumber')}
+                <a href={`tel:${phoneNumber.replace(/\s/g, '')}`} className="text-sm text-white/62 transition-colors hover:text-white">
+                  {phoneNumber}
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -126,6 +134,14 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Family House. {t('footer.rights')}
           </p>
           <p className="text-xs text-white/40">
+            <a
+              href="https://t.me/Tilav_web"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/60 transition-colors hover:text-primary"
+            >
+              @Tilav_web
+            </a>{' '}
             {t('footer.madeWith')}
           </p>
         </div>
