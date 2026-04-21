@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { ArrowRight, DoorOpen, Newspaper, Settings } from 'lucide-react'
 import { hotelInfoService } from '../../services/hotel-info.service'
-import { roomsService } from '../../services/rooms.service'
 import { servicesService } from '../../services/services.service'
 import { newsService } from '../../services/news.service'
 import heroFallback from '../../assets/hero.png'
@@ -17,12 +16,8 @@ export function AboutSection() {
     queryKey: ['hotelInfo'],
     queryFn: () => hotelInfoService.getInfo(),
   })
-  const [roomsQuery, servicesQuery, newsQuery] = useQueries({
+  const [servicesQuery, newsQuery] = useQueries({
     queries: [
-      {
-        queryKey: ['rooms'],
-        queryFn: () => roomsService.findAll(),
-      },
       {
         queryKey: ['services'],
         queryFn: () => servicesService.findAll(),
@@ -38,9 +33,7 @@ export function AboutSection() {
   const aboutStats = [
     {
       label: t('rooms.title'),
-      value: Array.isArray(roomsQuery.data)
-        ? roomsQuery.data.filter((room) => room.isActive).length
-        : 0,
+      value: hotelInfo?.roomsCount ?? 0,
       icon: DoorOpen,
     },
     {

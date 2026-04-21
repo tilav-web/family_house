@@ -25,6 +25,7 @@ interface HotelInfoFormValues {
   mapEmbedUrl: string
   latitude: string
   longitude: string
+  roomsCount: string
 }
 
 const defaultValues: HotelInfoFormValues = {
@@ -41,6 +42,7 @@ const defaultValues: HotelInfoFormValues = {
   mapEmbedUrl: '',
   latitude: '',
   longitude: '',
+  roomsCount: '',
 }
 
 function toFormValues(hotelInfo?: HotelInfo | null): HotelInfoFormValues {
@@ -62,6 +64,7 @@ function toFormValues(hotelInfo?: HotelInfo | null): HotelInfoFormValues {
     mapEmbedUrl: hotelInfo.mapEmbedUrl ?? '',
     latitude: hotelInfo.latitude?.toString() ?? '',
     longitude: hotelInfo.longitude?.toString() ?? '',
+    roomsCount: hotelInfo.roomsCount?.toString() ?? '',
   }
 }
 
@@ -107,6 +110,7 @@ export default function AdminHotelInfoPage() {
       const lat = parseFloat(data.latitude)
       const lng = parseFloat(data.longitude)
 
+      const rooms = parseInt(data.roomsCount, 10)
       return hotelInfoService.updateInfo({
         description: {
           uz: data.uz_description,
@@ -127,6 +131,7 @@ export default function AdminHotelInfoPage() {
         mapEmbedUrl: data.mapEmbedUrl ? extractIframeSrc(data.mapEmbedUrl) : undefined,
         latitude: isNaN(lat) ? undefined : lat,
         longitude: isNaN(lng) ? undefined : lng,
+        roomsCount: isNaN(rooms) ? undefined : rooms,
       })
     },
     onSuccess: () => {
@@ -220,6 +225,24 @@ export default function AdminHotelInfoPage() {
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Saytning header va footer qismida ko'rsatiladi
+            </p>
+          </div>
+        </div>
+
+        {/* Statistika */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold">Statistika (Biz haqimizda bo'limi)</h2>
+          <div>
+            <label className="mb-2 block text-sm font-medium">Xonalar umumiy soni</label>
+            <Input
+              {...register('roomsCount')}
+              placeholder="60"
+              type="number"
+              min="0"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              "Biz haqimizda" bo'limidagi xonalar soni — qo'lda yoziladi, chunki saytdagi Xonalar
+              bo'limida faqat namuna xonalar ko'rsatiladi
             </p>
           </div>
         </div>

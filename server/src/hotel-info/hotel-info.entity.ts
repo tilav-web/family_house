@@ -47,6 +47,9 @@ export class HotelInfo {
   @Column({ type: 'text', nullable: true })
   mapEmbedUrl: string;
 
+  @Column({ type: 'int', nullable: true })
+  roomsCount: number | null;
+
   @UpdateDateColumn()
   updatedAt: Date;
 }

@@ -27,4 +27,8 @@ export class UpdateHotelInfoDto {
   @IsOptional()
   @IsNumber()
   longitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  roomsCount?: number;
 }

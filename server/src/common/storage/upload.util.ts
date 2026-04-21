@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { diskStorage } from 'multer';
-import { mkdirSync } from 'fs';
+import { mkdirSync, promises as fs } from 'fs';
 import { extname, join, resolve } from 'path';
 import { v4 as uuid } from 'uuid';
 
@@ -26,6 +26,19 @@ function ensureDirectoryExists(path: string) {
 
 export function getUploadsRoot(): string {
   return resolve(process.env.UPLOADS_PATH || join(process.cwd(), 'uploads'));
+}
+
+/**
+ * Delete an uploaded file from disk given its public URL (e.g. /uploads/images/abc.jpg).
+ * Silently ignores missing files or invalid URLs.
+ */
+export async function deleteUploadedFile(
+  url: string | null | undefined,
+): Promise<void> {
+  if (!url || !url.startsWith('/uploads/')) return;
+  const relativePath = url.slice('/uploads/'.length);
+  const fullPath = join(getUploadsRoot(), relativePath);
+  await fs.unlink(fullPath).catch(() => undefined);
 }
 
 function createFileFilter(allowedMimeTypes: Set<string>) {

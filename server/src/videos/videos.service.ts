@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Video } from './video.entity';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
+import { deleteUploadedFile } from '../common/storage/upload.util';
 
 @Injectable()
 export class VideosService {
@@ -40,19 +41,33 @@ export class VideosService {
 
   async remove(id: string): Promise<void> {
     const video = await this.findOne(id);
+    const thumbnailUrl = video.thumbnailUrl;
+    const previewVideoUrl = video.previewVideoUrl;
     await this.videoRepository.remove(video);
+    await deleteUploadedFile(thumbnailUrl);
+    await deleteUploadedFile(previewVideoUrl);
   }
 
   async updateThumbnail(id: string, url: string): Promise<Video> {
     const video = await this.findOne(id);
+    const previousUrl = video.thumbnailUrl;
     video.thumbnailUrl = url;
-    return this.videoRepository.save(video);
+    const saved = await this.videoRepository.save(video);
+    if (previousUrl && previousUrl !== url) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 
   async updatePreviewVideo(id: string, url: string): Promise<Video> {
     const video = await this.findOne(id);
+    const previousUrl = video.previewVideoUrl;
     video.previewVideoUrl = url;
-    return this.videoRepository.save(video);
+    const saved = await this.videoRepository.save(video);
+    if (previousUrl && previousUrl !== url) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 
   async reorder(ids: string[]): Promise<void> {

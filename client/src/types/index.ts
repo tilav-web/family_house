@@ -184,6 +184,7 @@ export interface HotelInfo {
   latitude?: number | null
   longitude?: number | null
   mapEmbedUrl?: string | null
+  roomsCount?: number | null
 }
 
 export interface LoginResponse {

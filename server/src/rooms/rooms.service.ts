@@ -17,7 +17,7 @@ import { CreatePanoramaSceneDto } from './dto/create-panorama-scene.dto';
 import { UpdatePanoramaSceneDto } from './dto/update-panorama-scene.dto';
 import { CreatePanoramaHotspotDto } from './dto/create-panorama-hotspot.dto';
 import { UpdatePanoramaHotspotDto } from './dto/update-panorama-hotspot.dto';
-import { getUploadsRoot } from '../common/storage/upload.util';
+import { deleteUploadedFile, getUploadsRoot } from '../common/storage/upload.util';
 import { spawn } from 'child_process';
 
 @Injectable()
@@ -124,8 +124,19 @@ export class RoomsService {
   }
 
   async remove(id: string): Promise<void> {
-    const room = await this.findOneEntityOrThrow(id);
+    const room = await this.roomsRepository.findOne({
+      where: { id },
+      relations: { images: true, scenes: true },
+    });
+    if (!room) {
+      throw new NotFoundException(`Room with id ${id} not found`);
+    }
+    const filesToDelete: (string | null | undefined)[] = [
+      ...(room.images ?? []).map((img) => img.url),
+      ...(room.scenes ?? []).flatMap((s) => [s.panoramaUrl, s.thumbnailUrl]),
+    ];
     await this.roomsRepository.remove(room);
+    await Promise.all(filesToDelete.map((url) => deleteUploadedFile(url)));
   }
 
   async addImages(
@@ -173,6 +184,7 @@ export class RoomsService {
     }
 
     await this.roomImagesRepository.remove(image);
+    await deleteUploadedFile(image.url);
 
     const room = await this.findOneEntityOrThrow(roomId);
     if (room.thumbnailUrl === image.url) {
@@ -184,6 +196,7 @@ export class RoomsService {
       await this.roomsRepository.save(room);
     }
   }
+
 
   async setThumbnail(roomId: string, imageId: string): Promise<void> {
     const room = await this.findOneEntityOrThrow(roomId);
@@ -271,7 +284,11 @@ export class RoomsService {
 
   async removeScene(roomId: string, sceneId: string): Promise<void> {
     const scene = await this.findSceneOrThrow(roomId, sceneId);
+    const panoramaUrl = scene.panoramaUrl;
+    const thumbnailUrl = scene.thumbnailUrl;
     await this.panoramaScenesRepository.remove(scene);
+    await deleteUploadedFile(panoramaUrl);
+    await deleteUploadedFile(thumbnailUrl);
     await this.ensureRoomHasDefaultScene(roomId);
   }
 
@@ -281,6 +298,8 @@ export class RoomsService {
     file: Express.Multer.File,
   ): Promise<PanoramaScene> {
     const scene = await this.findSceneOrThrow(roomId, sceneId);
+    const previousPanoramaUrl = scene.panoramaUrl;
+    const previousThumbnailUrl = scene.thumbnailUrl;
     const originalExt = extname(file.originalname || file.filename).toLowerCase();
     const uploadsRoot = getUploadsRoot();
     const panoramaFolder = join(uploadsRoot, 'panoramas');
@@ -342,6 +361,15 @@ export class RoomsService {
     }
 
     await this.panoramaScenesRepository.save(scene);
+
+    // Clean up previous files (only if they differ from new ones)
+    if (previousPanoramaUrl && previousPanoramaUrl !== scene.panoramaUrl) {
+      await deleteUploadedFile(previousPanoramaUrl);
+    }
+    if (previousThumbnailUrl && previousThumbnailUrl !== scene.thumbnailUrl) {
+      await deleteUploadedFile(previousThumbnailUrl);
+    }
+
     return this.findSceneOrThrow(roomId, sceneId);
   }
 
@@ -351,8 +379,12 @@ export class RoomsService {
     file: Express.Multer.File,
   ): Promise<PanoramaScene> {
     const scene = await this.findSceneOrThrow(roomId, sceneId);
+    const previousThumbnailUrl = scene.thumbnailUrl;
     scene.thumbnailUrl = `/uploads/scene-thumbnails/${file.filename}`;
     await this.panoramaScenesRepository.save(scene);
+    if (previousThumbnailUrl && previousThumbnailUrl !== scene.thumbnailUrl) {
+      await deleteUploadedFile(previousThumbnailUrl);
+    }
     return this.findSceneOrThrow(roomId, sceneId);
   }
 

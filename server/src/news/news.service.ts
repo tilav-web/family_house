@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { News } from './news.entity';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
+import { deleteUploadedFile } from '../common/storage/upload.util';
 
 @Injectable()
 export class NewsService {
@@ -54,12 +55,19 @@ export class NewsService {
 
   async remove(id: string): Promise<void> {
     const news = await this.findOne(id, true);
+    const thumbnailUrl = news.thumbnailUrl;
     await this.newsRepository.remove(news);
+    await deleteUploadedFile(thumbnailUrl);
   }
 
   async updateThumbnail(id: string, url: string): Promise<News> {
     const news = await this.findOne(id, true);
+    const previousUrl = news.thumbnailUrl;
     news.thumbnailUrl = url;
-    return this.newsRepository.save(news);
+    const saved = await this.newsRepository.save(news);
+    if (previousUrl && previousUrl !== url) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 }

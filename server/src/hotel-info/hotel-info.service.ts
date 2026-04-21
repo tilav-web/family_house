@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { HotelInfo } from './hotel-info.entity';
 import { UpdateHotelInfoDto } from './dto/update-hotel-info.dto';
 import type { I18nField } from '../common/types/i18n-field.type';
+import { deleteUploadedFile } from '../common/storage/upload.util';
 
 @Injectable()
 export class HotelInfoService {
@@ -35,31 +36,56 @@ export class HotelInfoService {
 
   async updateImage(imageUrl: string): Promise<HotelInfo> {
     const info = await this.getInfo();
+    const previousUrl = info.imageUrl;
     info.imageUrl = imageUrl;
-    return this.hotelInfoRepository.save(info);
+    const saved = await this.hotelInfoRepository.save(info);
+    if (previousUrl && previousUrl !== imageUrl) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 
   async updateHeroVideoDesktop(videoUrl: string): Promise<HotelInfo> {
     const info = await this.getInfo();
+    const previousUrl = info.heroVideoDesktop;
     info.heroVideoDesktop = videoUrl;
-    return this.hotelInfoRepository.save(info);
+    const saved = await this.hotelInfoRepository.save(info);
+    if (previousUrl && previousUrl !== videoUrl) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 
   async updateHeroVideoMobile(videoUrl: string): Promise<HotelInfo> {
     const info = await this.getInfo();
+    const previousUrl = info.heroVideoMobile;
     info.heroVideoMobile = videoUrl;
-    return this.hotelInfoRepository.save(info);
+    const saved = await this.hotelInfoRepository.save(info);
+    if (previousUrl && previousUrl !== videoUrl) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 
   async updateHeroPosterDesktop(imageUrl: string): Promise<HotelInfo> {
     const info = await this.getInfo();
+    const previousUrl = info.heroPosterDesktop;
     info.heroPosterDesktop = imageUrl;
-    return this.hotelInfoRepository.save(info);
+    const saved = await this.hotelInfoRepository.save(info);
+    if (previousUrl && previousUrl !== imageUrl) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 
   async updateHeroPosterMobile(imageUrl: string): Promise<HotelInfo> {
     const info = await this.getInfo();
+    const previousUrl = info.heroPosterMobile;
     info.heroPosterMobile = imageUrl;
-    return this.hotelInfoRepository.save(info);
+    const saved = await this.hotelInfoRepository.save(info);
+    if (previousUrl && previousUrl !== imageUrl) {
+      await deleteUploadedFile(previousUrl);
+    }
+    return saved;
   }
 }
