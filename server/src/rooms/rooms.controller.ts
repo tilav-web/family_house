@@ -96,6 +96,15 @@ export class RoomsController {
     return { message: 'Images reordered successfully' };
   }
 
+  @Patch('admin/:id/thumbnail')
+  async setThumbnail(
+    @Param('id') id: string,
+    @Body() payload: { imageId: string },
+  ) {
+    await this.roomsService.setThumbnail(id, payload.imageId);
+    return { message: 'Thumbnail updated successfully' };
+  }
+
   @Post('admin/:id/scenes')
   async createScene(
     @Param('id') id: string,

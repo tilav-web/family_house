@@ -31,7 +31,7 @@ export class Room {
   amenities: I18nField;
 
   @Column({ type: 'varchar', nullable: true })
-  thumbnailUrl: string;
+  thumbnailUrl: string | null;
 
   @Column({ default: 0 })
   order: number;

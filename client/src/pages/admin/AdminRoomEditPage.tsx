@@ -231,6 +231,11 @@ export default function AdminRoomEditPage() {
     try { await roomsService.deleteImage(id, imgId); await refresh(); toast({ description: "Rasm o'chirildi" }) }
     catch { toast({ description: 'Xatolik', variant: 'destructive' }) }
   }
+  const setAsThumbnail = async (imgId: string) => {
+    if (!id) return
+    try { await roomsService.setThumbnail(id, imgId); await refresh(); toast({ description: 'Asosiy rasm o\'rnatildi!' }) }
+    catch { toast({ description: 'Xatolik', variant: 'destructive' }) }
+  }
   const uploadScenePanorama = async (sceneId: string, file: File | null) => {
     if (!id || !file) return
     try {
@@ -414,24 +419,49 @@ export default function AdminRoomEditPage() {
                 />
               </label>
             ) : (
-              <div className="flex flex-wrap gap-3">
-                {images.map((img, i) => (
-                  <div key={img.id} className="relative group w-36 h-24 rounded-xl overflow-hidden border hover:shadow-md transition-shadow">
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium">
-                        Asosiy
-                      </span>
-                    )}
-                    <button
-                      onClick={() => deleteImage(img.id)}
-                      className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-500/90 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Asosiy (bosh sahifada ko'rinadigan) rasmni o'zgartirish uchun istalgan rasmdagi <Star className="inline h-3 w-3 text-amber-500" /> tugmasini bosing
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {images.map((img) => {
+                    const isThumbnail = room?.thumbnailUrl === img.url
+                    return (
+                      <div
+                        key={img.id}
+                        className={`relative group w-36 h-24 rounded-xl overflow-hidden border-2 hover:shadow-md transition-all ${
+                          isThumbnail ? 'border-primary ring-2 ring-primary/30' : 'border-slate-200'
+                        }`}
+                      >
+                        <img src={img.url} alt="" className="w-full h-full object-cover" />
+                        {isThumbnail && (
+                          <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary text-white text-[10px] font-semibold">
+                            <Star className="h-2.5 w-2.5 fill-current" /> Asosiy
+                          </span>
+                        )}
+                        <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!isThumbnail && (
+                            <button
+                              onClick={() => setAsThumbnail(img.id)}
+                              title="Asosiy rasm qilish"
+                              className="p-1 rounded-full bg-white/90 text-amber-500 hover:bg-white hover:text-amber-600 shadow-sm"
+                            >
+                              <Star className="h-3 w-3" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteImage(img.id)}
+                            title="O'chirish"
+                            className="p-1 rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
             )}
           </section>
 

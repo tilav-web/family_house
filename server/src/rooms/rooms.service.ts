@@ -173,6 +173,28 @@ export class RoomsService {
     }
 
     await this.roomImagesRepository.remove(image);
+
+    const room = await this.findOneEntityOrThrow(roomId);
+    if (room.thumbnailUrl === image.url) {
+      const nextImage = await this.roomImagesRepository.findOne({
+        where: { roomId },
+        order: { order: 'ASC' },
+      });
+      room.thumbnailUrl = nextImage?.url ?? null;
+      await this.roomsRepository.save(room);
+    }
+  }
+
+  async setThumbnail(roomId: string, imageId: string): Promise<void> {
+    const room = await this.findOneEntityOrThrow(roomId);
+    const image = await this.roomImagesRepository.findOne({
+      where: { id: imageId, roomId },
+    });
+    if (!image) {
+      throw new NotFoundException(`Image with id ${imageId} not found`);
+    }
+    room.thumbnailUrl = image.url;
+    await this.roomsRepository.save(room);
   }
 
   async reorderImages(roomId: string, imageIds: string[]): Promise<void> {

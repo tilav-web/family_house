@@ -38,6 +38,8 @@ export const roomsService = {
       .then((response) => response.data),
   deleteImage: (roomId: string, imageId: string) =>
     api.delete(`/rooms/admin/${roomId}/images/${imageId}`),
+  setThumbnail: (roomId: string, imageId: string) =>
+    api.patch(`/rooms/admin/${roomId}/thumbnail`, { imageId }).then((response) => response.data),
   createScene: (roomId: string, data: PanoramaScenePayload) =>
     api
       .post<PanoramaScene>(`/rooms/admin/${roomId}/scenes`, data)
