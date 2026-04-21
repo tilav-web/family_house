@@ -13,16 +13,9 @@ const InstagramIcon = () => (
   </svg>
 )
 
-const FacebookIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-  </svg>
-)
-
 const socialLinks = [
-  { icon: InstagramIcon, href: '#', label: 'Instagram' },
-  { icon: FacebookIcon, href: '#', label: 'Facebook' },
-  { icon: Send, href: '#', label: 'Telegram' },
+  { icon: InstagramIcon, href: 'https://www.instagram.com/family.house.hotel?igsh=bjBucGI5dHM5ZTJh', label: 'Instagram' },
+  { icon: Send, href: 'https://t.me/FamilyHouse_Guest', label: 'Telegram' },
 ]
 
 const quickLinks = [
@@ -62,7 +55,7 @@ export function Footer() {
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Logo white />
-              <span className="text-xl font-bold text-white tracking-tight">Family House</span>
+              <span className="font-heading text-xl font-semibold text-white tracking-tight">Family House</span>
             </div>
             <p className="mb-6 text-sm leading-relaxed text-white/62">
               {t('footer.description')}

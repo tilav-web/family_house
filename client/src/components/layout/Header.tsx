@@ -91,8 +91,8 @@ export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
               onClick={(e) => { e.preventDefault(); isHomePage ? scrollTo('#hero') : navigate('/') }}
               className="flex items-center gap-2 group"
             >
-              <Logo white={!scrolled} />
-              <span className={`text-xl font-bold tracking-tight transition-colors ${
+              <Logo white={!scrolled || palette === 'midnight'} />
+              <span className={`font-heading text-xl font-semibold tracking-tight transition-colors ${
                 scrolled ? 'text-foreground' : 'text-white'
               }`}>
                 Family House
