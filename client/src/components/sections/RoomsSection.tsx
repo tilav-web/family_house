@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Eye } from 'lucide-react'
 import { roomsService } from '../../services/rooms.service'
-import { Button } from '../ui/button'
 import { Skeleton } from '../ui/skeleton'
 import { getLocalizedField } from '../../lib/i18n-field'
 import { ScrollReveal, StaggerContainer, StaggerItem } from '../shared/ScrollReveal'
@@ -13,6 +12,8 @@ export function RoomsSection() {
   const { data, isLoading } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => roomsService.findAll(),
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const MAX_ROOMS_ON_HOME = 6
