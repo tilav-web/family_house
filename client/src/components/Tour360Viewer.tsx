@@ -47,6 +47,7 @@ interface Tour360ViewerProps {
   onCoordinateSelect?: (coords: { pitch: number; yaw: number; sceneId: string }) => void
   heightClassName?: string
   showThumbnails?: boolean
+  showFullscreenButton?: boolean
 }
 
 function createTooltip(
@@ -68,6 +69,7 @@ export function Tour360Viewer({
   onCoordinateSelect,
   heightClassName = 'h-[420px]',
   showThumbnails = true,
+  showFullscreenButton = true,
 }: Tour360ViewerProps) {
   const { i18n } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -260,14 +262,16 @@ export function Tour360Viewer({
           }`}
         />
 
-        <Button
-          size="icon"
-          variant="secondary"
-          className="absolute right-4 top-4 z-10 rounded-lg bg-[var(--client-panel-strong)]"
-          onClick={() => setIsFullscreen((current) => !current)}
-        >
-          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-        </Button>
+        {showFullscreenButton && (
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute right-4 top-4 z-10 rounded-lg bg-[var(--client-panel-strong)]"
+            onClick={() => setIsFullscreen((current) => !current)}
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+        )}
 
         {activeScene && (
           <div className="absolute left-4 top-4 z-10 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">

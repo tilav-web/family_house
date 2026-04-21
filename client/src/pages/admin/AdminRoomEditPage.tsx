@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import {
   Plus, Trash2, ImagePlus, Pencil, Upload, ArrowRight,
-  ChevronLeft, MapPin, Navigation, Info, Camera, Layers,
+  ChevronLeft, Navigation, Info, Camera, Layers,
   CheckCircle2, X, Eye, EyeOff, Star, MousePointerClick,
 } from 'lucide-react'
 import { roomsService } from '../../services/rooms.service'
@@ -29,19 +29,12 @@ interface RoomFormValues {
 }
 interface SceneFormValues {
   uz_title: string; ru_title: string; en_title: string
-  initialYaw: number; initialPitch: number; initialHfov: number
-  order: number; isDefault: boolean; isActive: boolean
-  targetForwardId: string; targetForwardYaw: number
-  targetRightId: string; targetRightYaw: number
-  targetBackId: string; targetBackYaw: number
-  targetLeftId: string; targetLeftYaw: number
+  isDefault: boolean; isActive: boolean
 }
 interface HotspotFormValues {
-  type: 'scene' | 'info'
   uz_label: string; ru_label: string; en_label: string
   yaw: number; pitch: number
-  targetSceneId: string; targetYaw: number; targetPitch: number; targetHfov: number
-  order: number
+  targetSceneId: string
 }
 
 const roomDefaults: RoomFormValues = {
@@ -52,16 +45,11 @@ const roomDefaults: RoomFormValues = {
 }
 const sceneDefaults: SceneFormValues = {
   uz_title: '', ru_title: '', en_title: '',
-  initialYaw: 0, initialPitch: 0, initialHfov: 100,
-  order: 0, isDefault: false, isActive: true,
-  targetForwardId: '', targetForwardYaw: 0,
-  targetRightId: '', targetRightYaw: 90,
-  targetBackId: '', targetBackYaw: 180,
-  targetLeftId: '', targetLeftYaw: -90,
+  isDefault: false, isActive: true,
 }
 const hotspotDefaults: HotspotFormValues = {
-  type: 'scene', uz_label: '', ru_label: '', en_label: '',
-  yaw: 0, pitch: 0, targetSceneId: '', targetYaw: 0, targetPitch: 0, targetHfov: 100, order: 0,
+  uz_label: '', ru_label: '', en_label: '',
+  yaw: 0, pitch: 0, targetSceneId: '',
 }
 
 function toRoomForm(r?: Room | null): RoomFormValues {
@@ -77,20 +65,14 @@ function toSceneForm(s?: PanoramaScene | null): SceneFormValues {
   if (!s) return sceneDefaults
   return {
     uz_title: s.title.uz, ru_title: s.title.ru, en_title: s.title.en,
-    initialYaw: s.initialYaw, initialPitch: s.initialPitch, initialHfov: s.initialHfov,
-    order: s.order, isDefault: s.isDefault, isActive: s.isActive,
-    targetForwardId: s.targetForwardId ?? '', targetForwardYaw: s.targetForwardYaw ?? 0,
-    targetRightId: s.targetRightId ?? '', targetRightYaw: s.targetRightYaw ?? 90,
-    targetBackId: s.targetBackId ?? '', targetBackYaw: s.targetBackYaw ?? 180,
-    targetLeftId: s.targetLeftId ?? '', targetLeftYaw: s.targetLeftYaw ?? -90,
+    isDefault: s.isDefault, isActive: s.isActive,
   }
 }
 function toHotspotForm(h?: PanoramaHotspot | null): HotspotFormValues {
   if (!h) return hotspotDefaults
   return {
-    type: h.type, uz_label: h.label.uz, ru_label: h.label.ru, en_label: h.label.en,
+    uz_label: h.label.uz, ru_label: h.label.ru, en_label: h.label.en,
     yaw: h.yaw, pitch: h.pitch, targetSceneId: h.targetSceneId ?? '',
-    targetYaw: h.targetYaw ?? 0, targetPitch: h.targetPitch ?? 0, targetHfov: h.targetHfov ?? 100, order: h.order,
   }
 }
 
@@ -154,7 +136,6 @@ export default function AdminRoomEditPage() {
   const hotspotForm = useForm<HotspotFormValues>({ defaultValues: hotspotDefaults })
   const { errors: roomErrors } = roomForm.formState
   const { errors: sceneErrors } = sceneForm.formState
-  const hotspotType = useWatch({ control: hotspotForm.control, name: 'type' })
 
   useEffect(() => { roomForm.reset(toRoomForm(room)) }, [room, roomForm])
   useEffect(() => { sceneForm.reset(toSceneForm(editScene)) }, [editScene, sceneForm])
@@ -196,16 +177,8 @@ export default function AdminRoomEditPage() {
       if (!id) throw new Error('Room kerak')
       const p = {
         title: { uz: d.uz_title, ru: d.ru_title, en: d.en_title },
-        initialYaw: d.initialYaw, initialPitch: d.initialPitch, initialHfov: d.initialHfov,
-        order: d.order, isDefault: d.isDefault, isActive: d.isActive,
-        targetForwardId: d.targetForwardId || null,
-        targetForwardYaw: d.targetForwardId ? d.targetForwardYaw : null,
-        targetRightId: d.targetRightId || null,
-        targetRightYaw: d.targetRightId ? d.targetRightYaw : null,
-        targetBackId: d.targetBackId || null,
-        targetBackYaw: d.targetBackId ? d.targetBackYaw : null,
-        targetLeftId: d.targetLeftId || null,
-        targetLeftYaw: d.targetLeftId ? d.targetLeftYaw : null,
+        isDefault: d.isDefault,
+        isActive: d.isActive,
       }
       return editingSceneId ? roomsService.updateScene(id, editingSceneId, p) : roomsService.createScene(id, p)
     },
@@ -223,13 +196,11 @@ export default function AdminRoomEditPage() {
     mutationFn: (d: HotspotFormValues) => {
       if (!id || !activeSceneId) throw new Error('Scene kerak')
       const p = {
-        type: d.type, label: { uz: d.uz_label, ru: d.ru_label, en: d.en_label },
-        yaw: d.yaw, pitch: d.pitch,
-        targetSceneId: d.type === 'scene' ? d.targetSceneId : undefined,
-        targetYaw: d.type === 'scene' ? d.targetYaw : undefined,
-        targetPitch: d.type === 'scene' ? d.targetPitch : undefined,
-        targetHfov: d.type === 'scene' ? d.targetHfov : undefined,
-        order: d.order,
+        type: 'scene' as const,
+        label: { uz: d.uz_label, ru: d.ru_label, en: d.en_label },
+        yaw: d.yaw,
+        pitch: d.pitch,
+        targetSceneId: d.targetSceneId,
       }
       return editingHotspotId
         ? roomsService.updateHotspot(id, activeSceneId, editingHotspotId, p)
@@ -256,13 +227,12 @@ export default function AdminRoomEditPage() {
     try { await roomsService.deleteImage(id, imgId); await refresh(); toast({ description: "Rasm o'chirildi" }) }
     catch { toast({ description: 'Xatolik', variant: 'destructive' }) }
   }
-  const uploadSceneFile = async (sceneId: string, type: 'panorama' | 'thumbnail', file: File | null) => {
+  const uploadScenePanorama = async (sceneId: string, file: File | null) => {
     if (!id || !file) return
     try {
-      if (type === 'panorama') await roomsService.uploadScenePanorama(id, sceneId, file)
-      else await roomsService.uploadSceneThumbnail(id, sceneId, file)
+      await roomsService.uploadScenePanorama(id, sceneId, file)
       await refresh()
-      toast({ description: type === 'panorama' ? '360° rasm yuklandi!' : 'Thumbnail yuklandi!' })
+      toast({ description: '360° rasm yuklandi!' })
     } catch { toast({ description: 'Yuklash xatolik', variant: 'destructive' }) }
   }
   const deleteScene = async (sceneId: string) => {
@@ -313,7 +283,7 @@ export default function AdminRoomEditPage() {
           <StepIndicator step={1} title="Ma'lumotlar" done={stepRoom} active={!stepImages && !stepScenes} />
           <StepIndicator step={2} title="Rasmlar" done={stepImages} active={stepRoom && !stepScenes} />
           <StepIndicator step={3} title="360° Sceneler" done={stepScenes} active={stepRoom && stepImages && !stepScenes} />
-          <StepIndicator step={4} title="Yo'nalishlar" done={false} active={stepScenes} />
+          <StepIndicator step={4} title="Hotspotlar" done={false} active={stepScenes} />
         </div>
       )}
 
@@ -557,7 +527,7 @@ export default function AdminRoomEditPage() {
                           >
                             <Upload className="h-3.5 w-3.5" />
                             <input type="file" accept=".insp,image/*" className="hidden"
-                              onChange={(e) => { e.stopPropagation(); uploadSceneFile(scene.id, 'panorama', e.target.files?.[0] ?? null); e.target.value = '' }}
+                              onChange={(e) => { e.stopPropagation(); uploadScenePanorama(scene.id, e.target.files?.[0] ?? null); e.target.value = '' }}
                             />
                           </label>
                           {/* Edit */}
@@ -610,8 +580,8 @@ export default function AdminRoomEditPage() {
               <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 mb-6 text-sm text-blue-800 flex items-start gap-2">
                 <MousePointerClick className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Qanday ishlaydi:</strong> Panoramada eshik yoki o'tish joyini bosing — pitch va yaw avtomatik olinadi.
-                  Hotspot noto'g'ri joyda bo'lsa, panoramani to'g'ri joyga olib bosing — koordinata yangilanadi.
+                  <strong>Qanday ishlaydi:</strong> "Hotspot qo'shish" tugmasini bosing, keyin panoramada eshik yoki
+                  o'tish joyini bosing. Hotspot o'sha joyda paydo bo'ladi va qaysi xonaga o'tishini tanlaysiz.
                 </span>
               </div>
 
@@ -648,7 +618,6 @@ export default function AdminRoomEditPage() {
                     if (placementMode) {
                       setPlacementMode(false)
                     } else {
-                      // Yangi hotspot uchun
                       setEditingHotspotId(null)
                       hotspotForm.reset(hotspotDefaults)
                       setPlacementMode(true)
@@ -683,12 +652,10 @@ export default function AdminRoomEditPage() {
                   onCoordinateSelect={placementMode ? ({ pitch, yaw, sceneId }) => {
                     setSelectedSceneId(sceneId)
                     if (editingHotspotId) {
-                      // Mavjud hotspot ni ko'chirish
                       hotspotForm.setValue('pitch', pitch)
                       hotspotForm.setValue('yaw', yaw)
                       setHotspotDialogOpen(true)
                     } else {
-                      // Yangi hotspot yaratish
                       hotspotForm.reset(hotspotDefaults)
                       hotspotForm.setValue('pitch', pitch)
                       hotspotForm.setValue('yaw', yaw)
@@ -697,6 +664,8 @@ export default function AdminRoomEditPage() {
                     setPlacementMode(false)
                   } : undefined}
                   heightClassName="h-[500px]"
+                  showThumbnails={false}
+                  showFullscreenButton={false}
                 />
               </div>
 
@@ -720,41 +689,22 @@ export default function AdminRoomEditPage() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {[...activeScene.hotspots].sort((a, b) => a.order - b.order).map((h) => {
+                      {activeScene.hotspots.map((h) => {
                         const target = scenes.find((s) => s.id === h.targetSceneId)
                         return (
                           <div key={h.id} className="flex items-center justify-between rounded-xl border px-4 py-3 hover:bg-slate-50 transition-colors">
                             <div className="flex items-center gap-3">
-                              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                                h.type === 'scene' ? 'bg-primary/10 text-primary' : 'bg-blue-100 text-blue-600'
-                              }`}>
-                                {h.type === 'scene' ? <ArrowRight className="h-4 w-4" /> : <Info className="h-4 w-4" />}
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <ArrowRight className="h-4 w-4" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium">{h.label.uz || 'Nomsiz hotspot'}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {h.type === 'scene' && target
-                                    ? `→ ${target.title.uz}`
-                                    : h.type === 'info'
-                                    ? "Ma'lumot"
-                                    : 'Manzil tanlanmagan'
-                                  }
-                                  <span className="ml-2 text-slate-400">yaw: {h.yaw.toFixed(1)}°, pitch: {h.pitch.toFixed(1)}°</span>
+                                  {target ? `→ ${target.title.uz}` : 'Manzil tanlanmagan'}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              <button
-                                title="Joyini o'zgartirish — panoramada bosing"
-                                onClick={() => {
-                                  setEditingHotspotId(h.id)
-                                  hotspotForm.reset(toHotspotForm(h))
-                                  setPlacementMode(true)
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-orange-50 text-slate-400 hover:text-orange-600 transition-colors"
-                              >
-                                <MapPin className="h-3.5 w-3.5" />
-                              </button>
                               <button
                                 title="Tahrirlash"
                                 onClick={() => openHotspotDialog(h.id)}
@@ -821,27 +771,6 @@ export default function AdminRoomEditPage() {
               ))}
             </Tabs>
 
-            {/* Camera settings */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                Boshlang'ich kamera pozitsiyasi (ixtiyoriy)
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Yaw (gorizontal)</label>
-                  <Input {...sceneForm.register('initialYaw', { valueAsNumber: true })} type="number" step="0.1" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Pitch (vertikal)</label>
-                  <Input {...sceneForm.register('initialPitch', { valueAsNumber: true })} type="number" step="0.1" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Zoom (HFOV)</label>
-                  <Input {...sceneForm.register('initialHfov', { valueAsNumber: true })} type="number" step="0.1" />
-                </div>
-              </div>
-            </div>
-
             {/* Options */}
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-50 transition-colors">
@@ -854,80 +783,16 @@ export default function AdminRoomEditPage() {
                 <Eye className="h-3.5 w-3.5 text-green-500" />
                 Saytda ko'rinsin
               </label>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">Tartib:</label>
-                <Input {...sceneForm.register('order', { valueAsNumber: true })} type="number" className="w-20" />
-              </div>
             </div>
-
-            {/* Yo'nalishlar — 4 tomondan boshqa scene ga o'tish */}
-            {editingSceneId && scenes.length > 1 && (
-              <div className="pt-3 border-t">
-                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Navigation className="h-4 w-4" />
-                  Yo'nalishlar (qaysi scene ga o'tadi)
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {([
-                    { field: 'targetForwardId' as const, yawField: 'targetForwardYaw' as const, label: '⬆ Oldinga', defaultYaw: 0 },
-                    { field: 'targetBackId' as const, yawField: 'targetBackYaw' as const, label: '⬇ Ortga', defaultYaw: 180 },
-                    { field: 'targetLeftId' as const, yawField: 'targetLeftYaw' as const, label: '⬅ Chapga', defaultYaw: -90 },
-                    { field: 'targetRightId' as const, yawField: 'targetRightYaw' as const, label: '➡ O\'ngga', defaultYaw: 90 },
-                  ]).map(({ field, yawField, label, defaultYaw }) => (
-                    <div key={field}>
-                      <label className="mb-1 block text-xs font-medium">{label}</label>
-                      <select
-                        {...sceneForm.register(field)}
-                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                        onChange={(e) => {
-                          sceneForm.setValue(field, e.target.value)
-                          if (e.target.value && !sceneForm.getValues(yawField)) {
-                            sceneForm.setValue(yawField, defaultYaw)
-                          }
-                        }}
-                      >
-                        <option value="">— yo'q —</option>
-                        {scenes
-                          .filter((s) => s.id !== editingSceneId)
-                          .map((s) => (
-                            <option key={s.id} value={s.id}>{s.title.uz || s.title.ru || s.title.en}</option>
-                          ))
-                        }
-                      </select>
-                      {sceneForm.watch(field) && (
-                        <div className="mt-1">
-                          <label className="block text-[10px] text-muted-foreground">Strelka joyi (yaw°)</label>
-                          <Input
-                            {...sceneForm.register(yawField, { valueAsNumber: true })}
-                            type="number" step="1" className="h-8 text-xs"
-                            placeholder={`${defaultYaw}°`}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Yaw — strelka panoramada qayerda ko'rinishini belgilaydi (0° = markaz, 90° = o'ng, -90° = chap, 180° = orqa)
-                </p>
-              </div>
-            )}
 
             {/* Upload for existing scene */}
             {editingSceneId && (
-              <div className="flex gap-3 pt-3 border-t">
+              <div className="pt-3 border-t">
                 <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">
                   <Camera className="h-4 w-4 text-violet-500" />
                   360° rasm yuklash (.insp)
                   <input type="file" accept=".insp,image/*" className="hidden"
-                    onChange={(e) => { uploadSceneFile(editingSceneId, 'panorama', e.target.files?.[0] ?? null); e.target.value = '' }}
-                  />
-                </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">
-                  <ImagePlus className="h-4 w-4 text-emerald-500" />
-                  Thumbnail
-                  <input type="file" accept="image/*" className="hidden"
-                    onChange={(e) => { uploadSceneFile(editingSceneId, 'thumbnail', e.target.files?.[0] ?? null); e.target.value = '' }}
+                    onChange={(e) => { uploadScenePanorama(editingSceneId, e.target.files?.[0] ?? null); e.target.value = '' }}
                   />
                 </label>
               </div>
@@ -951,82 +816,51 @@ export default function AdminRoomEditPage() {
           <DialogHeader>
             <DialogTitle>{editingHotspotId ? "Hotspot tahrirlash" : "Yangi hotspot"}</DialogTitle>
             <DialogDescription>
-              Panoramada bosgan joyingiz koordinatalari avtomatik to'ldirildi
+              Qaysi xonaga o'tishini tanlang va nom bering
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={hotspotForm.handleSubmit((d) => {
-            if (d.type === 'scene' && !d.targetSceneId) {
-              toast({ description: "Qaysi scene'ga o'tishini tanlang!", variant: 'destructive' })
+            if (!d.targetSceneId) {
+              toast({ description: "Qaysi xonaga o'tishini tanlang!", variant: 'destructive' })
               return
             }
             saveHotspot(d)
           })} className="space-y-5">
 
-            {/* Type selection */}
-            <div>
-              <label className="mb-2 block text-sm font-medium">Hotspot turi</label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 cursor-pointer transition-all ${
-                  hotspotType === 'scene' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'
-                }`}>
-                  <input type="radio" value="scene" {...hotspotForm.register('type')} className="sr-only" />
-                  <ArrowRight className={`h-5 w-5 ${hotspotType === 'scene' ? 'text-primary' : 'text-slate-400'}`} />
-                  <div>
-                    <p className="text-sm font-medium">Boshqa xonaga o'tish</p>
-                  </div>
-                </label>
-                <label className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 cursor-pointer transition-all ${
-                  hotspotType === 'info' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
-                }`}>
-                  <input type="radio" value="info" {...hotspotForm.register('type')} className="sr-only" />
-                  <Info className={`h-5 w-5 ${hotspotType === 'info' ? 'text-blue-500' : 'text-slate-400'}`} />
-                  <div>
-                    <p className="text-sm font-medium">Ma'lumot ko'rsatish</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-
             {/* Labels */}
-            <Tabs value={hotspotLangTab} onValueChange={setHotspotLangTab}>
-              <TabsList className="w-full">
-                <TabsTrigger value="uz" className="flex-1">UZ</TabsTrigger>
-                <TabsTrigger value="ru" className="flex-1">RU</TabsTrigger>
-                <TabsTrigger value="en" className="flex-1">EN</TabsTrigger>
-              </TabsList>
-              {(['uz', 'ru', 'en'] as const).map((lang) => (
-                <TabsContent key={lang} value={lang} className="mt-3">
-                  <Input
-                    {...hotspotForm.register(`${lang}_label`)}
-                    placeholder={hotspotType === 'scene' ? "Masalan: Oshxonaga o'tish" : "Masalan: Konditsioner"}
-                  />
-                </TabsContent>
-              ))}
-            </Tabs>
-
-            {/* Koordinatalar (avtomatik to'ldiriladi) */}
-            <div className="rounded-lg bg-slate-50 border px-4 py-3">
-              <label className="mb-2 block text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
-                Koordinatalar (panoramada bosib o'zgartirish mumkin)
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-[10px] text-muted-foreground">Yaw (gorizontal °)</label>
-                  <Input {...hotspotForm.register('yaw', { valueAsNumber: true })} type="number" step="any" className="h-9" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[10px] text-muted-foreground">Pitch (vertikal °)</label>
-                  <Input {...hotspotForm.register('pitch', { valueAsNumber: true })} type="number" step="any" className="h-9" />
-                </div>
-              </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Hotspot nomi</label>
+              <Tabs value={hotspotLangTab} onValueChange={setHotspotLangTab}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="uz" className="flex-1">UZ</TabsTrigger>
+                  <TabsTrigger value="ru" className="flex-1">RU</TabsTrigger>
+                  <TabsTrigger value="en" className="flex-1">EN</TabsTrigger>
+                </TabsList>
+                {(['uz', 'ru', 'en'] as const).map((lang) => (
+                  <TabsContent key={lang} value={lang} className="mt-3">
+                    <Input
+                      {...hotspotForm.register(`${lang}_label`)}
+                      placeholder={
+                        lang === 'uz' ? "Masalan: Oshxonaga o'tish" :
+                        lang === 'ru' ? "Например: Перейти в кухню" :
+                        "Example: Go to kitchen"
+                      }
+                    />
+                  </TabsContent>
+                ))}
+              </Tabs>
             </div>
 
             {/* Target scene */}
-            {hotspotType === 'scene' && (
-              <div>
-                <label className="mb-2 block text-sm font-medium">Qaysi xonaga o'tsin?</label>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Qaysi xonaga o'tsin? <span className="text-red-400">*</span></label>
+              {scenes.filter((s) => s.id !== activeScene?.id).length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground border rounded-xl border-dashed">
+                  <p className="text-sm">Boshqa scene yo'q</p>
+                  <p className="text-xs mt-1">Avval yana bitta scene yarating</p>
+                </div>
+              ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {scenes.filter((s) => s.id !== activeScene?.id).map((s) => {
                     const selected = hotspotForm.watch('targetSceneId') === s.id
@@ -1046,12 +880,7 @@ export default function AdminRoomEditPage() {
                     )
                   })}
                 </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground">Tartib:</label>
-              <Input {...hotspotForm.register('order', { valueAsNumber: true })} type="number" className="w-20 h-9" />
+              )}
             </div>
 
             <DialogFooter>

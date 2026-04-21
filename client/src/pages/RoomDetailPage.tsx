@@ -335,6 +335,7 @@ export default function RoomDetailPage() {
                         initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
                         heightClassName="h-[400px] md:h-[500px]"
                         showThumbnails={false}
+                        showFullscreenButton={false}
                       />
                     </div>
                   </div>
@@ -430,6 +431,7 @@ export default function RoomDetailPage() {
                   initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
                   heightClassName="h-[calc(100dvh-6.5rem)]"
                   showThumbnails={false}
+                  showFullscreenButton={false}
                 />
               </div>
             </div>
