@@ -30,6 +30,7 @@ interface RoomFormValues {
 interface SceneFormValues {
   uz_title: string; ru_title: string; en_title: string
   isDefault: boolean; isActive: boolean
+  initialHfov: number
 }
 interface HotspotFormValues {
   uz_label: string; ru_label: string; en_label: string
@@ -46,6 +47,7 @@ const roomDefaults: RoomFormValues = {
 const sceneDefaults: SceneFormValues = {
   uz_title: '', ru_title: '', en_title: '',
   isDefault: false, isActive: true,
+  initialHfov: 120,
 }
 const hotspotDefaults: HotspotFormValues = {
   uz_label: '', ru_label: '', en_label: '',
@@ -66,6 +68,7 @@ function toSceneForm(s?: PanoramaScene | null): SceneFormValues {
   return {
     uz_title: s.title.uz, ru_title: s.title.ru, en_title: s.title.en,
     isDefault: s.isDefault, isActive: s.isActive,
+    initialHfov: s.initialHfov ?? 120,
   }
 }
 function toHotspotForm(h?: PanoramaHotspot | null): HotspotFormValues {
@@ -179,6 +182,7 @@ export default function AdminRoomEditPage() {
         title: { uz: d.uz_title, ru: d.ru_title, en: d.en_title },
         isDefault: d.isDefault,
         isActive: d.isActive,
+        initialHfov: d.initialHfov,
       }
       return editingSceneId ? roomsService.updateScene(id, editingSceneId, p) : roomsService.createScene(id, p)
     },
@@ -783,6 +787,26 @@ export default function AdminRoomEditPage() {
                 <Eye className="h-3.5 w-3.5 text-green-500" />
                 Saytda ko'rinsin
               </label>
+            </div>
+
+            {/* Boshlang'ich zoom */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                Boshlang'ich zoom (ko'rish kengligi)
+              </label>
+              <select
+                {...sceneForm.register('initialHfov', { valueAsNumber: true })}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              >
+                <option value={70}>Juda yaqin (70°)</option>
+                <option value={90}>Yaqin (90°)</option>
+                <option value={110}>O'rtacha (110°)</option>
+                <option value={120}>Keng — tavsiya etiladi (120°)</option>
+                <option value={130}>Juda keng (130°)</option>
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Foydalanuvchi xonaga kirgan paytidagi zoom darajasi
+              </p>
             </div>
 
             {/* Upload for existing scene */}

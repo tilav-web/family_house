@@ -41,7 +41,7 @@ export class PanoramaScene {
   @Column({ type: 'float', default: 0 })
   initialPitch: number;
 
-  @Column({ type: 'float', default: 100 })
+  @Column({ type: 'float', default: 120 })
   initialHfov: number;
 
   @Column({ default: false })
