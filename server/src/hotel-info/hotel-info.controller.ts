@@ -64,4 +64,26 @@ export class HotelInfoController {
     const videoUrl = `/uploads/videos/${file.filename}`;
     return this.hotelInfoService.updateHeroVideoMobile(videoUrl);
   }
+
+  @Post('upload-hero-poster-desktop')
+  @UseInterceptors(FileInterceptor('file', createImageUploadOptions('images')))
+  async uploadHeroPosterDesktop(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Desktop poster image is required');
+    }
+
+    const imageUrl = `/uploads/images/${file.filename}`;
+    return this.hotelInfoService.updateHeroPosterDesktop(imageUrl);
+  }
+
+  @Post('upload-hero-poster-mobile')
+  @UseInterceptors(FileInterceptor('file', createImageUploadOptions('images')))
+  async uploadHeroPosterMobile(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Mobile poster image is required');
+    }
+
+    const imageUrl = `/uploads/images/${file.filename}`;
+    return this.hotelInfoService.updateHeroPosterMobile(imageUrl);
+  }
 }

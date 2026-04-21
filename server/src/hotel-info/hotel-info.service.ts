@@ -50,4 +50,16 @@ export class HotelInfoService {
     info.heroVideoMobile = videoUrl;
     return this.hotelInfoRepository.save(info);
   }
+
+  async updateHeroPosterDesktop(imageUrl: string): Promise<HotelInfo> {
+    const info = await this.getInfo();
+    info.heroPosterDesktop = imageUrl;
+    return this.hotelInfoRepository.save(info);
+  }
+
+  async updateHeroPosterMobile(imageUrl: string): Promise<HotelInfo> {
+    const info = await this.getInfo();
+    info.heroPosterMobile = imageUrl;
+    return this.hotelInfoRepository.save(info);
+  }
 }

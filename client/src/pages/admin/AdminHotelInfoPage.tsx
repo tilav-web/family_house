@@ -326,67 +326,73 @@ export default function AdminHotelInfoPage() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-sm font-medium">Hero desktop video</p>
-            {hotelInfo?.heroVideoDesktop && (
-              <video
-                src={hotelInfo.heroVideoDesktop}
+            <p className="mb-2 text-sm font-medium">Hero poster (desktop)</p>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Video yuklanishidan oldin chiqib turadigan rasm (gorizontal)
+            </p>
+            {hotelInfo?.heroPosterDesktop && (
+              <img
+                src={hotelInfo.heroPosterDesktop}
+                alt="Hero desktop poster"
                 className="mb-3 aspect-video w-full rounded-lg object-cover"
-                controls
               />
             )}
             <input
               type="file"
-              accept="video/*"
-              disabled={uploadingField === 'desktop'}
+              accept="image/*"
+              disabled={uploadingField === 'posterDesktop'}
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
-                setUploadingField('desktop')
+                setUploadingField('posterDesktop')
                 hotelInfoService
-                  .uploadHeroDesktop(file)
+                  .uploadHeroPosterDesktop(file)
                   .then(() => {
                     queryClient.invalidateQueries({ queryKey: ['hotelInfo'] })
-                    toast({ description: 'Desktop hero video uploaded' })
+                    toast({ description: 'Desktop poster uploaded' })
                   })
                   .catch(() => {
-                    toast({ description: 'Video upload failed', variant: 'destructive' })
+                    toast({ description: 'Image upload failed', variant: 'destructive' })
                   })
                   .finally(() => setUploadingField(null))
               }}
             />
-            {uploadingField === 'desktop' && <p className="mt-1 text-xs text-primary animate-pulse">Yuklanmoqda...</p>}
+            {uploadingField === 'posterDesktop' && <p className="mt-1 text-xs text-primary animate-pulse">Yuklanmoqda...</p>}
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-sm font-medium">Hero mobile video</p>
-            {hotelInfo?.heroVideoMobile && (
-              <video
-                src={hotelInfo.heroVideoMobile}
-                className="mb-3 aspect-video w-full rounded-lg object-cover"
-                controls
+            <p className="mb-2 text-sm font-medium">Hero poster (mobile)</p>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Video yuklanishidan oldin chiqib turadigan rasm (vertikal)
+            </p>
+            {hotelInfo?.heroPosterMobile && (
+              <img
+                src={hotelInfo.heroPosterMobile}
+                alt="Hero mobile poster"
+                className="mb-3 aspect-[9/16] w-32 rounded-lg object-cover"
               />
             )}
             <input
               type="file"
-              accept="video/*"
-              disabled={uploadingField === 'mobile'}
+              accept="image/*"
+              disabled={uploadingField === 'posterMobile'}
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
-                setUploadingField('mobile')
+                setUploadingField('posterMobile')
                 hotelInfoService
-                  .uploadHeroMobile(file)
+                  .uploadHeroPosterMobile(file)
                   .then(() => {
                     queryClient.invalidateQueries({ queryKey: ['hotelInfo'] })
-                    toast({ description: 'Mobile hero video uploaded' })
+                    toast({ description: 'Mobile poster uploaded' })
                   })
                   .catch(() => {
-                    toast({ description: 'Video upload failed', variant: 'destructive' })
+                    toast({ description: 'Image upload failed', variant: 'destructive' })
                   })
                   .finally(() => setUploadingField(null))
               }}
             />
-            {uploadingField === 'mobile' && <p className="mt-1 text-xs text-primary animate-pulse">Yuklanmoqda...</p>}
+            {uploadingField === 'posterMobile' && <p className="mt-1 text-xs text-primary animate-pulse">Yuklanmoqda...</p>}
           </div>
         </div>
 

@@ -31,4 +31,18 @@ export const hotelInfoService = {
       .post<HotelInfo>('/hotel-info/upload-hero-mobile', formData)
       .then((response) => response.data)
   },
+  uploadHeroPosterDesktop: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api
+      .post<HotelInfo>('/hotel-info/upload-hero-poster-desktop', formData)
+      .then((response) => response.data)
+  },
+  uploadHeroPosterMobile: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api
+      .post<HotelInfo>('/hotel-info/upload-hero-poster-mobile', formData)
+      .then((response) => response.data)
+  },
 }

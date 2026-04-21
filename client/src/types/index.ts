@@ -176,6 +176,8 @@ export interface HotelInfo {
   imageUrl?: string | null
   heroVideoDesktop?: string | null
   heroVideoMobile?: string | null
+  heroPosterDesktop?: string | null
+  heroPosterMobile?: string | null
   heroText?: I18nField | null
   heroSubtext?: I18nField | null
   phoneNumber?: string | null

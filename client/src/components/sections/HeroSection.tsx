@@ -76,7 +76,9 @@ export function HeroSection() {
   const heroVideoUrl = isMobileViewport
     ? hotelInfo?.heroVideoMobile || '/mobile.mp4'
     : hotelInfo?.heroVideoDesktop || '/desktop.mp4'
-  const posterImage = hotelInfo?.imageUrl || (isMobileViewport ? heroMobilePoster : heroDesktopPoster)
+  const posterImage = isMobileViewport
+    ? hotelInfo?.heroPosterMobile || hotelInfo?.heroPosterDesktop || heroMobilePoster
+    : hotelInfo?.heroPosterDesktop || hotelInfo?.heroPosterMobile || heroDesktopPoster
 
   if (isLoading) {
     return (

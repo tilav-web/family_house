@@ -23,6 +23,12 @@ export class HotelInfo {
   @Column({ type: 'varchar', nullable: true })
   heroVideoMobile: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  heroPosterDesktop: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  heroPosterMobile: string;
+
   @Column({ type: 'jsonb', nullable: true })
   heroText: I18nField;
 
