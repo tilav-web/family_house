@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import configuration from './config/configuration';
 import { DatabaseModule } from './database/database.module';
@@ -25,6 +26,11 @@ import { getUploadsRoot } from './common/storage/upload.util';
       load: [configuration],
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1_000, limit: 10 },
+      { name: 'medium', ttl: 60_000, limit: 120 },
+      { name: 'long', ttl: 3_600_000, limit: 2_000 },
+    ]),
     DatabaseModule,
     BotModule,
     AdminModule,
@@ -45,6 +51,10 @@ import { getUploadsRoot } from './common/storage/upload.util';
   ],
   controllers: [AppController],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

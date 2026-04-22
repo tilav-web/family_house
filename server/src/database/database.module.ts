@@ -39,6 +39,7 @@ const entities = [
       useFactory: (configService: ConfigService<AppConfig>) => {
         const dbConfig =
           configService.getOrThrow<AppConfig['database']>('database');
+        const isProd = process.env.NODE_ENV === 'production';
         return {
           type: 'postgres',
           host: dbConfig.host,
@@ -48,8 +49,10 @@ const entities = [
           database: dbConfig.name,
           schema: 'public',
           entities,
-          synchronize: true, // development only; use migrations for production
-          logging: process.env.NODE_ENV !== 'production',
+          synchronize: !isProd,
+          migrationsRun: isProd,
+          migrations: [__dirname + '/migrations/*.{ts,js}'],
+          logging: !isProd,
         };
       },
     }),

@@ -20,6 +20,26 @@ const VIDEO_MIME_TYPES = new Set([
   'video/quicktime',
 ]);
 
+const MIME_TO_EXT: Record<string, Set<string>> = {
+  'image/jpeg': new Set(['.jpg', '.jpeg']),
+  'image/jpg': new Set(['.jpg', '.jpeg']),
+  'image/png': new Set(['.png']),
+  'image/webp': new Set(['.webp']),
+  'video/mp4': new Set(['.mp4', '.m4v']),
+  'video/webm': new Set(['.webm']),
+  'video/quicktime': new Set(['.mov']),
+};
+
+function isExtensionConsistentWithMime(
+  mime: string,
+  originalName: string,
+): boolean {
+  const allowed = MIME_TO_EXT[mime];
+  if (!allowed) return true;
+  const ext = extname(originalName || '').toLowerCase();
+  return ext !== '' && allowed.has(ext);
+}
+
 function ensureDirectoryExists(path: string) {
   mkdirSync(path, { recursive: true });
 }
@@ -50,6 +70,16 @@ function createFileFilter(allowedMimeTypes: Set<string>) {
     if (!allowedMimeTypes.has(file.mimetype)) {
       callback(
         new BadRequestException(`Unsupported file type: ${file.mimetype}`),
+        false,
+      );
+      return;
+    }
+
+    if (!isExtensionConsistentWithMime(file.mimetype, file.originalname)) {
+      callback(
+        new BadRequestException(
+          `File extension does not match content type: ${file.mimetype}`,
+        ),
         false,
       );
       return;

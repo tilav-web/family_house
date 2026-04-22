@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: family_house
       POSTGRES_USER: family_house_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-strongpassword}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -26,17 +26,18 @@ services:
     ports:
       - "5000:5000"
     environment:
+      NODE_ENV: production
       PORT: 5000
-      CLIENT_URL: http://hotel-familyhouse.uz
+      CLIENT_URL: ${CLIENT_URL:-http://hotel-familyhouse.uz}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: family_house
       DB_USER: family_house_user
-      DB_PASSWORD: ${DB_PASSWORD:-strongpassword}
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
-      JWT_EXPIRES_IN: 7d
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       UPLOADS_PATH: /app/uploads
     volumes:
       - uploads:/app/uploads
@@ -45,6 +46,12 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/api/health').then(r=>{if(r.status!==200)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 networks:
   app-network:
