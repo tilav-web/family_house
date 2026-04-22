@@ -46,7 +46,6 @@ import { getUploadsRoot } from './common/storage/upload.util';
     ServeStaticModule.forRoot({
       rootPath: getUploadsRoot(),
       serveRoot: '/uploads',
-      exclude: ['/api/(.*)'],
     }),
   ],
   controllers: [AppController],
