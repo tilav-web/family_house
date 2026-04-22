@@ -16,6 +16,7 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { VideosModule } from './videos/videos.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { StatsModule } from './stats/stats.module';
+import { BotModule } from './bot/bot.module';
 import { getUploadsRoot } from './common/storage/upload.util';
 
 @Module({
@@ -25,6 +26,7 @@ import { getUploadsRoot } from './common/storage/upload.util';
       isGlobal: true,
     }),
     DatabaseModule,
+    BotModule,
     AdminModule,
     AuthModule,
     HotelInfoModule,

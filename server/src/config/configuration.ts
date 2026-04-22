@@ -23,6 +23,7 @@ export interface AppConfig {
   uploads: {
     path: string;
   };
+  serverPublicUrl: string;
 }
 
 export default (): AppConfig => ({
@@ -46,4 +47,5 @@ export default (): AppConfig => ({
   uploads: {
     path: process.env.UPLOADS_PATH || '/app/uploads',
   },
+  serverPublicUrl: process.env.SERVER_PUBLIC_URL || '',
 });

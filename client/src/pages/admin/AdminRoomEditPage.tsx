@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -132,7 +132,13 @@ export default function AdminRoomEditPage() {
 
   const activeScene = scenes.find((s) => s.id === activeSceneId) ?? null
   const editScene = scenes.find((s) => s.id === editingSceneId) ?? null
-  const editHotspot = activeScene?.hotspots.find((h) => h.id === editingHotspotId) ?? null
+  const editHotspot = useMemo(
+    () =>
+      editingHotspotId
+        ? scenes.flatMap((s) => s.hotspots ?? []).find((h) => h.id === editingHotspotId) ?? null
+        : null,
+    [scenes, editingHotspotId],
+  )
 
   const roomForm = useForm<RoomFormValues>({ defaultValues: roomDefaults })
   const sceneForm = useForm<SceneFormValues>({ defaultValues: sceneDefaults })
@@ -140,9 +146,24 @@ export default function AdminRoomEditPage() {
   const { errors: roomErrors } = roomForm.formState
   const { errors: sceneErrors } = sceneForm.formState
 
-  useEffect(() => { roomForm.reset(toRoomForm(room)) }, [room, roomForm])
-  useEffect(() => { sceneForm.reset(toSceneForm(editScene)) }, [editScene, sceneForm])
-  useEffect(() => { hotspotForm.reset(toHotspotForm(editHotspot)) }, [editHotspot, hotspotForm])
+  // Refs hold the latest values so reset effects can depend on editing IDs only,
+  // preventing form state from being wiped on background refetches.
+  const roomRef = useRef(room)
+  roomRef.current = room
+  const editSceneRef = useRef(editScene)
+  editSceneRef.current = editScene
+  const editHotspotRef = useRef(editHotspot)
+  editHotspotRef.current = editHotspot
+
+  useEffect(() => {
+    roomForm.reset(toRoomForm(roomRef.current))
+  }, [room?.id, roomForm])
+  useEffect(() => {
+    sceneForm.reset(toSceneForm(editSceneRef.current))
+  }, [editingSceneId, sceneForm])
+  useEffect(() => {
+    hotspotForm.reset(toHotspotForm(editHotspotRef.current))
+  }, [editingHotspotId, hotspotForm])
 
   const refresh = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ['admin', 'rooms'] }),
@@ -199,16 +220,15 @@ export default function AdminRoomEditPage() {
   const { mutate: saveHotspot, isPending: savingHotspot } = useMutation({
     mutationFn: (d: HotspotFormValues) => {
       if (!id || !activeSceneId) throw new Error('Scene kerak')
-      const p = {
-        type: 'scene' as const,
+      const base = {
         label: { uz: d.uz_label, ru: d.ru_label, en: d.en_label },
         yaw: d.yaw,
         pitch: d.pitch,
         targetSceneId: d.targetSceneId,
       }
       return editingHotspotId
-        ? roomsService.updateHotspot(id, activeSceneId, editingHotspotId, p)
-        : roomsService.createHotspot(id, activeSceneId, p)
+        ? roomsService.updateHotspot(id, activeSceneId, editingHotspotId, base)
+        : roomsService.createHotspot(id, activeSceneId, { ...base, type: 'scene' })
     },
     onSuccess: async () => {
       await refresh()
@@ -218,6 +238,21 @@ export default function AdminRoomEditPage() {
       toast({ description: editingHotspotId ? 'Hotspot yangilandi!' : 'Hotspot qo\'shildi!' })
     },
     onError: () => toast({ description: 'Hotspot xatolik', variant: 'destructive' }),
+  })
+
+  const { mutate: moveHotspot, isPending: movingHotspot } = useMutation({
+    mutationFn: (p: { sceneId: string; hotspotId: string; yaw: number; pitch: number }) => {
+      if (!id) throw new Error('Room kerak')
+      return roomsService.updateHotspot(id, p.sceneId, p.hotspotId, {
+        yaw: p.yaw,
+        pitch: p.pitch,
+      })
+    },
+    onSuccess: async () => {
+      await refresh()
+      toast({ description: "Hotspot ko'chirildi" })
+    },
+    onError: () => toast({ description: 'Ko\'chirish xatolik', variant: 'destructive' }),
   })
 
   // ─── Helpers ───
@@ -651,6 +686,7 @@ export default function AdminRoomEditPage() {
                   onClick={() => {
                     if (placementMode) {
                       setPlacementMode(false)
+                      setEditingHotspotId(null)
                     } else {
                       setEditingHotspotId(null)
                       hotspotForm.reset(hotspotDefaults)
@@ -669,7 +705,10 @@ export default function AdminRoomEditPage() {
                 </Button>
                 {placementMode && (
                   <button
-                    onClick={() => setPlacementMode(false)}
+                    onClick={() => {
+                      setPlacementMode(false)
+                      setEditingHotspotId(null)
+                    }}
                     className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Bekor qilish
@@ -686,9 +725,13 @@ export default function AdminRoomEditPage() {
                   onCoordinateSelect={placementMode ? ({ pitch, yaw, sceneId }) => {
                     setSelectedSceneId(sceneId)
                     if (editingHotspotId) {
-                      hotspotForm.setValue('pitch', pitch)
-                      hotspotForm.setValue('yaw', yaw)
-                      setHotspotDialogOpen(true)
+                      moveHotspot({
+                        sceneId,
+                        hotspotId: editingHotspotId,
+                        yaw,
+                        pitch,
+                      })
+                      setEditingHotspotId(null)
                     } else {
                       hotspotForm.reset(hotspotDefaults)
                       hotspotForm.setValue('pitch', pitch)
@@ -739,6 +782,17 @@ export default function AdminRoomEditPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
+                              <button
+                                title="Joyini ko'chirish"
+                                disabled={movingHotspot}
+                                onClick={() => {
+                                  setEditingHotspotId(h.id)
+                                  setPlacementMode(true)
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-orange-600 transition-colors disabled:opacity-50"
+                              >
+                                <MousePointerClick className="h-3.5 w-3.5" />
+                              </button>
                               <button
                                 title="Tahrirlash"
                                 onClick={() => openHotspotDialog(h.id)}

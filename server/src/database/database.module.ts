@@ -13,6 +13,7 @@ import { News } from '../news/news.entity';
 import { Testimonial } from '../testimonials/testimonial.entity';
 import { Video } from '../videos/video.entity';
 import { Contact } from '../contacts/contact.entity';
+import { BotSettings } from '../bot/bot-settings.entity';
 import { SeedService } from './seed.service';
 
 const entities = [
@@ -27,6 +28,7 @@ const entities = [
   Testimonial,
   Video,
   Contact,
+  BotSettings,
 ];
 
 @Module({

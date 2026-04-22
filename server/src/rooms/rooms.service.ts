@@ -425,25 +425,21 @@ export class RoomsService {
 
     const nextType = dto.type ?? hotspot.type;
     const nextTargetSceneId =
-      dto.targetSceneId !== undefined
-        ? dto.targetSceneId
-        : (hotspot.targetSceneId ?? undefined);
+      nextType === 'info'
+        ? null
+        : (dto.targetSceneId ?? hotspot.targetSceneId);
 
-    await this.validateHotspot(roomId, nextType, nextTargetSceneId);
+    await this.validateHotspot(
+      roomId,
+      nextType,
+      nextTargetSceneId ?? undefined,
+    );
 
-    Object.assign(hotspot, {
-      ...dto,
-      targetSceneId:
-        dto.targetSceneId ??
-        (nextType === 'scene' ? hotspot.targetSceneId : null),
-      iconUrl: dto.iconUrl ?? hotspot.iconUrl,
-      targetYaw: dto.targetYaw ?? hotspot.targetYaw,
-      targetPitch: dto.targetPitch ?? hotspot.targetPitch,
-      targetHfov: dto.targetHfov ?? hotspot.targetHfov,
-    });
+    Object.assign(hotspot, dto);
+    hotspot.type = nextType;
+    hotspot.targetSceneId = nextTargetSceneId;
 
     if (nextType === 'info') {
-      hotspot.targetSceneId = null;
       hotspot.targetYaw = null;
       hotspot.targetPitch = null;
       hotspot.targetHfov = null;
