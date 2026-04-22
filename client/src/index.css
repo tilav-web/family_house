@@ -397,8 +397,6 @@
   left: 50%;
   top: calc(100% + 10px);
   transform: translateX(-50%);
-  border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.92);
   color: white;
   white-space: nowrap;
   padding: 6px 10px;
@@ -523,7 +521,6 @@
 }
 
 [data-client-theme='midnight'] .tour-hotspot__label {
-  background: rgba(10, 13, 28, 0.92);
   color: #f2f5ff;
   border: 1px solid rgba(242, 245, 255, 0.14);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
