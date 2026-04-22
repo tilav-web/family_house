@@ -421,7 +421,12 @@ export class RoomsService {
     dto: UpdatePanoramaHotspotDto,
   ): Promise<PanoramaHotspot> {
     await this.findSceneOrThrow(roomId, sceneId);
-    const hotspot = await this.findHotspotOrThrow(sceneId, hotspotId);
+    const hotspot = await this.panoramaHotspotsRepository.findOne({
+      where: { id: hotspotId, sceneId },
+    });
+    if (!hotspot) {
+      throw new NotFoundException(`Hotspot with id ${hotspotId} not found`);
+    }
 
     const nextType = dto.type ?? hotspot.type;
     const nextTargetSceneId =
