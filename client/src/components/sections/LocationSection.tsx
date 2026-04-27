@@ -14,17 +14,6 @@ function extractIframeSrc(input?: string | null): string {
   return trimmed
 }
 
-// Google Maps embed URL ichidagi !3d{lat}!4d{lng} koordinatalarini ajratish
-function extractCoordsFromEmbed(url: string): { lat: number; lng: number } | null {
-  if (!url) return null
-  const match = url.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
-  if (!match) return null
-  const lat = Number(match[1])
-  const lng = Number(match[2])
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
-  return { lat, lng }
-}
-
 export function LocationSection() {
   const { t } = useTranslation()
 
@@ -34,11 +23,7 @@ export function LocationSection() {
   })
 
   const mapUrl = extractIframeSrc(hotelInfo?.mapEmbedUrl)
-  const embedCoords = extractCoordsFromEmbed(mapUrl)
-  const lat = embedCoords?.lat ?? hotelInfo?.latitude
-  const lng = embedCoords?.lng ?? hotelInfo?.longitude
   const hasMap = !!mapUrl
-  const hasCoords = lat != null && lng != null
 
   return (
     <section id="location" className="client-section overflow-hidden py-24 lg:py-32">
@@ -132,19 +117,6 @@ export function LocationSection() {
               </div>
             </div>
 
-            {(hasCoords || hasMap) && (
-              <a
-                href={hasCoords
-                  ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-                  : mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="client-panel-strong flex items-center justify-center gap-2 rounded-lg p-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
-              >
-                <MapPin className="h-4 w-4" />
-                {t('location.openMaps')}
-              </a>
-            )}
           </ScrollReveal>
         </div>
       </div>
