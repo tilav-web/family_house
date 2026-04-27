@@ -21,14 +21,8 @@ export class Room {
   @Column({ type: 'jsonb', nullable: true })
   description: I18nField;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  pricePerNight: number;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  pricePerNightDouble: number | null;
-
   @Column({ type: 'jsonb', nullable: true })
-  priceTiers: Array<{ guests: string; price: number }> | null;
+  priceTiers: Array<{ guests: string; price: number | null }> | null;
 
   @Column({ type: 'varchar', default: 'USD' })
   currency: string;

@@ -65,15 +65,13 @@ export interface PanoramaScene {
 
 export interface PriceTier {
   guests: string
-  price: number
+  price: number | null
 }
 
 export interface Room {
   id: string
   name: I18nField
   description: I18nField
-  pricePerNight: number
-  pricePerNightDouble?: number | null
   priceTiers?: PriceTier[] | null
   currency: string
   amenities: I18nField
@@ -90,8 +88,6 @@ export interface RoomPayload {
   name: I18nField
   description?: I18nField
   amenities?: I18nField
-  pricePerNight: number
-  pricePerNightDouble?: number | null
   priceTiers?: PriceTier[] | null
   currency?: string
   thumbnailUrl?: string

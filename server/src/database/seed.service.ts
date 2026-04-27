@@ -178,7 +178,7 @@ export class SeedService implements OnApplicationBootstrap {
           ru: 'Комфортный и современно оборудованный стандартный номер. Просторная кровать, рабочий стол, шкаф и собственная ванная комната. Ежедневная уборка.',
           en: 'Comfortable and modern standard room. Spacious bed, work desk, wardrobe and private bathroom. Daily cleaning included.',
         },
-        pricePerNight: 350000,
+        priceTiers: [{ guests: '1', price: 350000 }],
         currency: 'UZS',
         amenities: {
           uz: 'Wi-Fi, Konditsioner, TV, Mini-bar, Hammom',
@@ -198,7 +198,7 @@ export class SeedService implements OnApplicationBootstrap {
           ru: 'Просторный и роскошный номер люкс. Отдельная спальня и гостиная, кровать king-size, джакузи и балкон.',
           en: 'Spacious and luxurious deluxe room. Separate bedroom and living room, king-size bed, jacuzzi and balcony.',
         },
-        pricePerNight: 650000,
+        priceTiers: [{ guests: '1', price: 650000 }],
         currency: 'UZS',
         amenities: {
           uz: 'Wi-Fi, Konditsioner, Smart TV, Mini-bar, Jakuzi, Balkon, Xalat',
@@ -218,7 +218,7 @@ export class SeedService implements OnApplicationBootstrap {
           ru: 'Просторный номер, специально разработанный для семей. Две кровати, место для детей и просторная ванная комната.',
           en: 'Spacious room specially designed for families. Two beds, space for children and a large bathroom.',
         },
-        pricePerNight: 500000,
+        priceTiers: [{ guests: '1', price: 500000 }],
         currency: 'UZS',
         amenities: {
           uz: 'Wi-Fi, Konditsioner, TV, Mini-bar, Keng hammom, Bolalar kravati',

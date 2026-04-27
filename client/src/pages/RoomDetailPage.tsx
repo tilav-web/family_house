@@ -123,11 +123,12 @@ export default function RoomDetailPage() {
   }
 
   const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
-  const tiers = (room.priceTiers && room.priceTiers.length > 0)
-    ? [...room.priceTiers]
-        .map((t) => ({ guests: String(t.guests), price: Number(t.price) }))
-        .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
-    : [{ guests: '1', price: Number(room.pricePerNight) || 0 }]
+  const tiers = [...(room.priceTiers ?? [])]
+    .map((t) => ({
+      guests: String(t.guests),
+      price: t.price == null || !Number.isFinite(Number(t.price)) ? null : Number(t.price),
+    }))
+    .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
 
   return (
     <>
@@ -187,7 +188,7 @@ export default function RoomDetailPage() {
                           {tier.guests} {t('rooms.guestsLabel')}
                         </p>
                         <p className="mt-1 text-lg font-semibold">
-                          {Number(tier.price).toLocaleString(locale)} {room.currency}
+                          {tier.price != null ? `${tier.price.toLocaleString(locale)} ${room.currency}` : '—'}
                         </p>
                       </div>
                     ))}
@@ -232,7 +233,13 @@ export default function RoomDetailPage() {
                           <div key={tier.guests}>
                             <p className="text-xs text-muted-foreground">{tier.guests} {t('rooms.guestsLabel')}</p>
                             <p className="text-xl font-semibold text-foreground">
-                              {Number(tier.price).toLocaleString(locale)} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                              {tier.price != null ? (
+                                <>
+                                  {tier.price.toLocaleString(locale)} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                                </>
+                              ) : (
+                                <span className="text-sm font-normal text-muted-foreground">—</span>
+                              )}
                             </p>
                           </div>
                         ))}
@@ -355,13 +362,21 @@ export default function RoomDetailPage() {
                           {tier.guests} {t('rooms.guestsLabel')}
                         </p>
                         <p className="mt-1 text-2xl font-semibold text-foreground">
-                          {Number(tier.price).toLocaleString(locale)} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                          {tier.price != null ? (
+                            <>
+                              {tier.price.toLocaleString(locale)} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                            </>
+                          ) : (
+                            <span className="text-base font-normal text-muted-foreground">—</span>
+                          )}
                         </p>
                       </div>
                     ))}
-                    <p className="text-xs text-muted-foreground">
-                      {t('rooms.perNight')}
-                    </p>
+                    {tiers.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('rooms.perNight')}
+                      </p>
+                    )}
                   </div>
 
                   <div className="mt-6 space-y-3">

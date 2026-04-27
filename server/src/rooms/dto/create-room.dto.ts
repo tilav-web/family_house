@@ -20,9 +20,10 @@ export class PriceTierDto {
   })
   guests: string;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  price: number;
+  price?: number | null;
 }
 import type { I18nField } from '../../common/types/i18n-field.type';
 
@@ -34,14 +35,6 @@ export class CreateRoomDto {
   @IsObject()
   @IsOptional()
   description?: I18nField;
-
-  @IsNumber()
-  @IsNotEmpty()
-  pricePerNight: number;
-
-  @IsNumber()
-  @IsOptional()
-  pricePerNightDouble?: number | null;
 
   @IsArray()
   @IsOptional()

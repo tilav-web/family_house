@@ -44,7 +44,7 @@ const roomDefaults: RoomFormValues = {
   uz_name: '', ru_name: '', en_name: '',
   uz_description: '', ru_description: '', en_description: '',
   uz_amenities: '', ru_amenities: '', en_amenities: '',
-  priceTiers: [{ guests: '1', price: 0 }],
+  priceTiers: [{ guests: '1', price: null }],
   currency: 'UZS', order: 0, isActive: true,
 }
 const sceneDefaults: SceneFormValues = {
@@ -60,8 +60,11 @@ const hotspotDefaults: HotspotFormValues = {
 function toRoomForm(r?: Room | null): RoomFormValues {
   if (!r) return roomDefaults
   const tiers = (r.priceTiers && r.priceTiers.length > 0)
-    ? r.priceTiers.map((t) => ({ guests: String(t.guests), price: Number(t.price) }))
-    : [{ guests: '1', price: Number(r.pricePerNight) || 0 }]
+    ? r.priceTiers.map((t) => ({
+        guests: String(t.guests),
+        price: t.price == null ? null : Number(t.price),
+      }))
+    : [{ guests: '1', price: null }]
   return {
     uz_name: r.name.uz, ru_name: r.name.ru, en_name: r.name.en,
     uz_description: r.description?.uz ?? '', ru_description: r.description?.ru ?? '', en_description: r.description?.en ?? '',
@@ -189,17 +192,18 @@ export default function AdminRoomEditPage() {
   const { mutate: saveRoom, isPending: savingRoom } = useMutation({
     mutationFn: (d: RoomFormValues) => {
       const sortedTiers = [...d.priceTiers]
-        .map((t) => ({ guests: String(t.guests).trim().replace(/\s*-\s*/, '-'), price: Number(t.price) }))
-        .filter((t) => /^\d+(-\d+)?$/.test(t.guests) && t.price >= 0)
+        .map((t) => {
+          const guests = String(t.guests).trim().replace(/\s*-\s*/, '-')
+          const priceNum = t.price == null || (t.price as unknown as string) === '' ? null : Number(t.price)
+          const price = priceNum != null && Number.isFinite(priceNum) && priceNum >= 0 ? priceNum : null
+          return { guests, price }
+        })
+        .filter((t) => /^\d+(-\d+)?$/.test(t.guests))
         .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
-      const basePrice = sortedTiers.length > 0
-        ? sortedTiers[0].price
-        : 0
       const p: RoomPayload = {
         name: { uz: d.uz_name, ru: d.ru_name, en: d.en_name },
         description: { uz: d.uz_description, ru: d.ru_description, en: d.en_description },
         amenities: { uz: d.uz_amenities, ru: d.ru_amenities, en: d.en_amenities },
-        pricePerNight: basePrice,
         priceTiers: sortedTiers,
         currency: d.currency, order: d.order, isActive: d.isActive,
       }
@@ -396,9 +400,9 @@ export default function AdminRoomEditPage() {
           <div className="rounded-xl border border-slate-200 p-4">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold">Narx variantlari (tuniga) <span className="text-red-400">*</span></p>
+                <p className="text-sm font-semibold">Narx variantlari (tuniga)</p>
                 <p className="text-xs text-muted-foreground">
-                  Har bir mehmon soni uchun alohida narx kiriting. Masalan: 1, 2 yoki 3-5 (diapazon uchun chiziqcha bilan)
+                  Kishi soni: 1, 2 yoki 3-5 (chiziqcha bilan diapazon). Narx ixtiyoriy — kiritmasangiz public sahifada ko'rsatilmaydi.
                 </p>
               </div>
               <Button
@@ -414,7 +418,7 @@ export default function AdminRoomEditPage() {
                   const next = Number.isFinite(nextGuests) && nextGuests < Number.MAX_SAFE_INTEGER
                     ? String(nextGuests + 1)
                     : '1'
-                  tierFields.append({ guests: next, price: 0 })
+                  tierFields.append({ guests: next, price: null })
                 }}
                 className="gap-1.5"
               >
@@ -445,16 +449,15 @@ export default function AdminRoomEditPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs text-muted-foreground">Narx (tuniga)</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">Narx (tuniga, ixtiyoriy)</label>
                     <Input
                       {...roomForm.register(`priceTiers.${index}.price`, {
-                        valueAsNumber: true,
-                        required: true,
+                        setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
                         min: 0,
                       })}
                       type="number"
                       min={0}
-                      placeholder="500000"
+                      placeholder="Kiritmaslik mumkin"
                     />
                   </div>
                   <button

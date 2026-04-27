@@ -61,7 +61,13 @@ export default function AdminRoomsPage() {
               <div>
                 <CardTitle>{room.name.uz}</CardTitle>
                 <p className="mt-1 text-sm text-slate-600">
-                  {room.pricePerNight} {room.currency}
+                  {(() => {
+                    const priced = (room.priceTiers ?? []).filter((t) => t.price != null && Number.isFinite(Number(t.price)))
+                    if (priced.length === 0) return '—'
+                    return priced
+                      .map((t) => `${t.guests}: ${Number(t.price).toLocaleString()} ${room.currency}`)
+                      .join(' · ')
+                  })()}
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
                   {getLocalizedField(room.description, 'uz') || 'No description'}

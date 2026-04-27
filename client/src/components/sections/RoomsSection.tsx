@@ -5,7 +5,6 @@ import { ArrowRight, Eye } from 'lucide-react'
 import { roomsService } from '../../services/rooms.service'
 import { Skeleton } from '../ui/skeleton'
 import { getLocalizedField } from '../../lib/i18n-field'
-import { guestsSortKey } from '../../lib/utils'
 import { ScrollReveal, StaggerContainer, StaggerItem } from '../shared/ScrollReveal'
 
 export function RoomsSection() {
@@ -77,11 +76,12 @@ export function RoomsSection() {
               .slice(0, 3)
             const sceneCount = room.scenes?.filter((scene: { isActive: boolean }) => scene.isActive).length ?? 0
             const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
-            const tiers = (room.priceTiers && room.priceTiers.length > 0)
-              ? [...room.priceTiers]
-                  .map((t) => ({ guests: String(t.guests), price: Number(t.price) }))
-                  .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
-              : [{ guests: '1', price: Number(room.pricePerNight) || 0 }]
+            const pricedTiers = (room.priceTiers ?? []).filter(
+              (t): t is { guests: string; price: number } => t.price != null && Number.isFinite(Number(t.price)),
+            )
+            const lowestPrice = pricedTiers.length > 0
+              ? pricedTiers.reduce((min, t) => (Number(t.price) < Number(min.price) ? t : min)).price
+              : null
 
             return (
               <StaggerItem key={room.id}>
@@ -108,27 +108,17 @@ export function RoomsSection() {
                         </div>
                       )}
 
-                      <div className="absolute bottom-4 left-4 flex max-w-[80%] flex-col gap-0.5 rounded-lg bg-primary px-4 py-2 text-primary-foreground shadow-[0_14px_32px_var(--client-shadow)]">
-                        {tiers.map((tier) => (
-                          <div key={tier.guests} className="flex items-baseline gap-2 text-sm font-semibold">
-                            <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/80">
-                              {tier.guests} {t('rooms.guestsLabel')}
-                            </span>
-                            <span>{Number(tier.price).toLocaleString(locale)} {room.currency}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {lowestPrice != null && (
+                        <div className="absolute bottom-4 left-4 max-w-[80%] rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_14px_32px_var(--client-shadow)]">
+                          {Number(lowestPrice).toLocaleString(locale)} {room.currency}
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-xl font-semibold text-foreground transition-colors group-hover:text-primary">
-                          {name}
-                        </h3>
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          {t('rooms.perNight')}
-                        </span>
-                      </div>
+                      <h3 className="text-xl font-semibold text-foreground transition-colors group-hover:text-primary">
+                        {name}
+                      </h3>
 
                       <p className="mt-3 line-clamp-2 text-sm leading-7 text-muted-foreground">
                         {description}

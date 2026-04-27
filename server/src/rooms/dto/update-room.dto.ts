@@ -20,14 +20,6 @@ export class UpdateRoomDto {
   @IsOptional()
   description?: I18nField;
 
-  @IsNumber()
-  @IsOptional()
-  pricePerNight?: number;
-
-  @IsNumber()
-  @IsOptional()
-  pricePerNightDouble?: number | null;
-
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
