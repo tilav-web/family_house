@@ -131,7 +131,8 @@ export default function AdminHotelInfoPage() {
           en: data.en_heroSubtext,
         },
         phoneNumbers: data.phoneNumbers
-          .map((p) => p.value.trim())
+          .flatMap((p) => p.value.split(/[,;\n]+|\s+(?=\+)/))
+          .map((v) => v.trim())
           .filter((v) => v.length > 0),
         mapEmbedUrl: data.mapEmbedUrl ? extractIframeSrc(data.mapEmbedUrl) : undefined,
         latitude: isNaN(lat) ? undefined : lat,
@@ -255,7 +256,7 @@ export default function AdminHotelInfoPage() {
             ))}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Bir nechta raqam qo'shishingiz mumkin. Header va footer'da hammasi ko'rinadi.
+            Bir nechta raqam qo'shishingiz mumkin. Har bir raqamni alohida maydonga yozing — yoki bitta maydonga "+998… +998…", vergul yoki yangi qator bilan yozing, tizim avtomatik ajratadi.
           </p>
         </div>
 
