@@ -7,14 +7,18 @@ import {
   IsOptional,
   IsArray,
   ValidateNested,
+  Matches,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class PriceTierDto {
-  @IsNumber()
-  @Min(1)
-  guests: number;
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d+(\s*-\s*\d+)?$/, {
+    message: "Kishi soni '1', '2' yoki '3-5' ko'rinishida bo'lishi kerak",
+  })
+  guests: string;
 
   @IsNumber()
   @Min(0)

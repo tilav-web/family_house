@@ -64,7 +64,7 @@ export interface PanoramaScene {
 }
 
 export interface PriceTier {
-  guests: number
+  guests: string
   price: number
 }
 

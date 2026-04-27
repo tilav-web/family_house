@@ -14,6 +14,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { roomsService } from '../services/rooms.service'
 import { getLocalizedField } from '../lib/i18n-field'
+import { guestsSortKey } from '../lib/utils'
 import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { Tour360Viewer } from '../components/Tour360Viewer'
@@ -123,8 +124,10 @@ export default function RoomDetailPage() {
 
   const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
   const tiers = (room.priceTiers && room.priceTiers.length > 0)
-    ? [...room.priceTiers].sort((a, b) => a.guests - b.guests)
-    : [{ guests: 1, price: Number(room.pricePerNight) || 0 }]
+    ? [...room.priceTiers]
+        .map((t) => ({ guests: String(t.guests), price: Number(t.price) }))
+        .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
+    : [{ guests: '1', price: Number(room.pricePerNight) || 0 }]
 
   return (
     <>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { roomsService } from '../../services/rooms.service'
 import type { PanoramaHotspot, PanoramaScene, PriceTier, Room, RoomPayload } from '../../types'
+import { guestsSortKey } from '../../lib/utils'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
@@ -43,7 +44,7 @@ const roomDefaults: RoomFormValues = {
   uz_name: '', ru_name: '', en_name: '',
   uz_description: '', ru_description: '', en_description: '',
   uz_amenities: '', ru_amenities: '', en_amenities: '',
-  priceTiers: [{ guests: 1, price: 0 }],
+  priceTiers: [{ guests: '1', price: 0 }],
   currency: 'UZS', order: 0, isActive: true,
 }
 const sceneDefaults: SceneFormValues = {
@@ -59,8 +60,8 @@ const hotspotDefaults: HotspotFormValues = {
 function toRoomForm(r?: Room | null): RoomFormValues {
   if (!r) return roomDefaults
   const tiers = (r.priceTiers && r.priceTiers.length > 0)
-    ? r.priceTiers.map((t) => ({ guests: Number(t.guests), price: Number(t.price) }))
-    : [{ guests: 1, price: Number(r.pricePerNight) || 0 }]
+    ? r.priceTiers.map((t) => ({ guests: String(t.guests), price: Number(t.price) }))
+    : [{ guests: '1', price: Number(r.pricePerNight) || 0 }]
   return {
     uz_name: r.name.uz, ru_name: r.name.ru, en_name: r.name.en,
     uz_description: r.description?.uz ?? '', ru_description: r.description?.ru ?? '', en_description: r.description?.en ?? '',
@@ -188,9 +189,9 @@ export default function AdminRoomEditPage() {
   const { mutate: saveRoom, isPending: savingRoom } = useMutation({
     mutationFn: (d: RoomFormValues) => {
       const sortedTiers = [...d.priceTiers]
-        .filter((t) => t.guests > 0 && t.price >= 0)
-        .map((t) => ({ guests: Number(t.guests), price: Number(t.price) }))
-        .sort((a, b) => a.guests - b.guests)
+        .map((t) => ({ guests: String(t.guests).trim().replace(/\s*-\s*/, '-'), price: Number(t.price) }))
+        .filter((t) => /^\d+(-\d+)?$/.test(t.guests) && t.price >= 0)
+        .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
       const basePrice = sortedTiers.length > 0
         ? sortedTiers[0].price
         : 0
@@ -397,7 +398,7 @@ export default function AdminRoomEditPage() {
               <div>
                 <p className="text-sm font-semibold">Narx variantlari (tuniga) <span className="text-red-400">*</span></p>
                 <p className="text-xs text-muted-foreground">
-                  Har bir mehmon soni uchun alohida narx kiriting. Masalan: 1 kishi — 300 000, 2 kishi — 500 000
+                  Har bir mehmon soni uchun alohida narx kiriting. Masalan: 1, 2 yoki 3-5 (diapazon uchun chiziqcha bilan)
                 </p>
               </div>
               <Button
@@ -405,9 +406,15 @@ export default function AdminRoomEditPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const last = tierFields.fields[tierFields.fields.length - 1]
-                  const nextGuests = last ? Number((last as unknown as PriceTier).guests || 0) + 1 : 1
-                  tierFields.append({ guests: nextGuests, price: 0 })
+                  const lastIndex = tierFields.fields.length - 1
+                  const lastGuests = lastIndex >= 0
+                    ? roomForm.getValues(`priceTiers.${lastIndex}.guests`)
+                    : ''
+                  const nextGuests = guestsSortKey(lastGuests)
+                  const next = Number.isFinite(nextGuests) && nextGuests < Number.MAX_SAFE_INTEGER
+                    ? String(nextGuests + 1)
+                    : '1'
+                  tierFields.append({ guests: next, price: 0 })
                 }}
                 className="gap-1.5"
               >
@@ -429,13 +436,12 @@ export default function AdminRoomEditPage() {
                     <label className="mb-1 block text-xs text-muted-foreground">Kishi soni</label>
                     <Input
                       {...roomForm.register(`priceTiers.${index}.guests`, {
-                        valueAsNumber: true,
                         required: true,
-                        min: 1,
+                        pattern: /^\s*\d+(\s*-\s*\d+)?\s*$/,
                       })}
-                      type="number"
-                      min={1}
-                      placeholder="1"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="1 yoki 3-5"
                     />
                   </div>
                   <div className="flex-1">

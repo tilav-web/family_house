@@ -5,6 +5,7 @@ import { ArrowRight, Eye } from 'lucide-react'
 import { roomsService } from '../../services/rooms.service'
 import { Skeleton } from '../ui/skeleton'
 import { getLocalizedField } from '../../lib/i18n-field'
+import { guestsSortKey } from '../../lib/utils'
 import { ScrollReveal, StaggerContainer, StaggerItem } from '../shared/ScrollReveal'
 
 export function RoomsSection() {
@@ -77,8 +78,10 @@ export function RoomsSection() {
             const sceneCount = room.scenes?.filter((scene: { isActive: boolean }) => scene.isActive).length ?? 0
             const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
             const tiers = (room.priceTiers && room.priceTiers.length > 0)
-              ? [...room.priceTiers].sort((a, b) => a.guests - b.guests)
-              : [{ guests: 1, price: Number(room.pricePerNight) || 0 }]
+              ? [...room.priceTiers]
+                  .map((t) => ({ guests: String(t.guests), price: Number(t.price) }))
+                  .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
+              : [{ guests: '1', price: Number(room.pricePerNight) || 0 }]
 
             return (
               <StaggerItem key={room.id}>
