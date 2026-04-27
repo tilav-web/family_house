@@ -18,9 +18,11 @@ import {
 import { Trash2, Plus, Star, Upload, UserCircle } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useToast } from '../../components/ui/use-toast'
+import { COUNTRIES, getCountryFlagUrl } from '../../lib/countries'
 
 interface TestimonialFormValues {
   authorName: string
+  authorCountry: string
   uz_text: string
   ru_text: string
   en_text: string
@@ -31,6 +33,7 @@ interface TestimonialFormValues {
 
 const defaultValues: TestimonialFormValues = {
   authorName: '',
+  authorCountry: '',
   uz_text: '',
   ru_text: '',
   en_text: '',
@@ -51,14 +54,16 @@ export default function AdminTestimonialsPage() {
     queryFn: () => testimonialsService.findAllAdmin(),
   })
 
-  const { register, handleSubmit, reset, setValue } = useForm({
+  const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues,
   })
+  const watchedCountry = watch('authorCountry')
 
   const { mutate: saveTestimonial, isPending } = useMutation({
     mutationFn: (data: TestimonialFormValues) => {
       const testimonialData = {
         authorName: data.authorName,
+        authorCountry: data.authorCountry || undefined,
         text: {
           uz: data.uz_text,
           ru: data.ru_text,
@@ -109,6 +114,7 @@ export default function AdminTestimonialsPage() {
   const handleEdit = (testimonial: Testimonial) => {
     setEditingTestimonial(testimonial)
     setValue('authorName', testimonial.authorName)
+    setValue('authorCountry', testimonial.authorCountry ?? '')
     setValue('uz_text', testimonial.text.uz)
     setValue('ru_text', testimonial.text.ru)
     setValue('en_text', testimonial.text.en)
@@ -213,6 +219,31 @@ export default function AdminTestimonialsPage() {
                     <Input {...register('authorName')} placeholder="Ism familiya" />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium mb-1.5">Davlat</label>
+                    <div className="flex items-center gap-2">
+                      {watchedCountry && getCountryFlagUrl(watchedCountry) ? (
+                        <img
+                          src={getCountryFlagUrl(watchedCountry)!}
+                          alt={watchedCountry}
+                          className="h-7 w-10 shrink-0 rounded-sm border border-slate-200 object-cover"
+                        />
+                      ) : (
+                        <div className="h-7 w-10 shrink-0 rounded-sm border border-dashed border-slate-300 bg-slate-50" />
+                      )}
+                      <select
+                        {...register('authorCountry')}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">— tanlanmagan —</option>
+                        {COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium mb-1.5">Baho (1-5)</label>
                     <div className="flex items-center gap-2">
                       <Input
@@ -306,7 +337,17 @@ export default function AdminTestimonialsPage() {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-base">{testimonial.authorName}</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  {testimonial.authorCountry && getCountryFlagUrl(testimonial.authorCountry) && (
+                    <img
+                      src={getCountryFlagUrl(testimonial.authorCountry)!}
+                      alt={testimonial.authorCountry.toUpperCase()}
+                      title={testimonial.authorCountry.toUpperCase()}
+                      className="h-4 w-6 rounded-sm border border-slate-200 object-cover"
+                    />
+                  )}
+                  {testimonial.authorName}
+                </CardTitle>
                 <div className="flex items-center gap-3 mt-1">
                   <div className="flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (

@@ -14,6 +14,17 @@ function extractIframeSrc(input?: string | null): string {
   return trimmed
 }
 
+// Google Maps embed URL ichidagi !3d{lat}!4d{lng} koordinatalarini ajratish
+function extractCoordsFromEmbed(url: string): { lat: number; lng: number } | null {
+  if (!url) return null
+  const match = url.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
+  if (!match) return null
+  const lat = Number(match[1])
+  const lng = Number(match[2])
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  return { lat, lng }
+}
+
 export function LocationSection() {
   const { t } = useTranslation()
 
@@ -23,10 +34,11 @@ export function LocationSection() {
   })
 
   const mapUrl = extractIframeSrc(hotelInfo?.mapEmbedUrl)
-  const lat = hotelInfo?.latitude
-  const lng = hotelInfo?.longitude
+  const embedCoords = extractCoordsFromEmbed(mapUrl)
+  const lat = embedCoords?.lat ?? hotelInfo?.latitude
+  const lng = embedCoords?.lng ?? hotelInfo?.longitude
   const hasMap = !!mapUrl
-  const hasCoords = !!(lat && lng)
+  const hasCoords = lat != null && lng != null
 
   return (
     <section id="location" className="client-section overflow-hidden py-24 lg:py-32">

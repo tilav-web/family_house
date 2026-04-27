@@ -18,6 +18,9 @@ export class Testimonial {
   @Column({ type: 'varchar', nullable: true })
   authorPhotoUrl: string;
 
+  @Column({ type: 'varchar', length: 2, nullable: true })
+  authorCountry: string;
+
   @Column({ type: 'jsonb' })
   text: I18nField;
 

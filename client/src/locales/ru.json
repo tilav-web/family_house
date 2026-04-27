@@ -32,6 +32,8 @@
     "subtitle": "Комфортные и современные номера для каждого гостя",
     "price": "цена",
     "perNight": "за ночь",
+    "singleGuest": "1 гость",
+    "doubleGuest": "2 гостя",
     "currency": "сум",
     "amenities": "Удобства",
     "viewDetails": "Подробнее",

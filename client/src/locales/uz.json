@@ -32,6 +32,8 @@
     "subtitle": "Har bir mehmon uchun qulay va zamonaviy xonalar",
     "price": "narx",
     "perNight": "tuniga",
+    "singleGuest": "1 kishi",
+    "doubleGuest": "2 kishi",
     "currency": "so'm",
     "amenities": "Qulayliklar",
     "viewDetails": "Batafsil ko'rish",

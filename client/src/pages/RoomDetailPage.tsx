@@ -67,6 +67,14 @@ export default function RoomDetailPage() {
     }
   }, [images.length, selectedImg])
 
+  useEffect(() => {
+    if (images.length <= 1 || tourOpen || lightboxOpen) return
+    const interval = setInterval(() => {
+      setSelectedImg((current) => (current + 1) % images.length)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [images.length, tourOpen, lightboxOpen])
+
   if (error) {
     return (
       <div className="min-h-screen bg-background pt-16 md:pt-20">
@@ -113,9 +121,11 @@ export default function RoomDetailPage() {
     setSelectedImg((current) => (current === images.length - 1 ? 0 : current + 1))
   }
 
-  const formattedPrice = room.pricePerNight?.toLocaleString(
-    i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US',
-  )
+  const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+  const formattedPrice = Number(room.pricePerNight)?.toLocaleString(locale)
+  const formattedPriceDouble = room.pricePerNightDouble != null
+    ? Number(room.pricePerNightDouble).toLocaleString(locale)
+    : null
 
   return (
     <>
@@ -127,31 +137,13 @@ export default function RoomDetailPage() {
             {selectedImage ? (
               <>
                 <img
+                  key={selectedImage.id}
                   src={selectedImage.url}
                   alt={name}
-                  className="h-full w-full cursor-zoom-in object-cover"
+                  className="h-full w-full cursor-zoom-in object-cover transition-opacity duration-700 ease-in-out animate-in fade-in"
                   onClick={() => setLightboxOpen(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/30" />
-
-                {images.length > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={prevImg}
-                      className="absolute left-5 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/15 bg-black/25 p-3 text-white backdrop-blur-sm transition-colors hover:bg-black/40"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextImg}
-                      className="absolute right-5 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/15 bg-black/25 p-3 text-white backdrop-blur-sm transition-colors hover:bg-black/40"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </>
-                )}
               </>
             ) : (
               <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 text-white/60">
@@ -189,12 +181,22 @@ export default function RoomDetailPage() {
                   <div className="mt-7 flex flex-wrap gap-3">
                     <div className="rounded-lg border border-white/15 bg-black/20 px-4 py-3 text-white backdrop-blur-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                        {t('rooms.price')}
+                        {t('rooms.singleGuest')}
                       </p>
                       <p className="mt-1 text-lg font-semibold">
                         {formattedPrice} {room.currency}
                       </p>
                     </div>
+                    {formattedPriceDouble && (
+                      <div className="rounded-lg border border-white/15 bg-black/20 px-4 py-3 text-white backdrop-blur-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                          {t('rooms.doubleGuest')}
+                        </p>
+                        <p className="mt-1 text-lg font-semibold">
+                          {formattedPriceDouble} {room.currency}
+                        </p>
+                      </div>
+                    )}
                     <div className="rounded-lg border border-white/15 bg-black/20 px-4 py-3 text-white/90 backdrop-blur-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
                         {t('rooms.gallery')}
@@ -229,14 +231,24 @@ export default function RoomDetailPage() {
                   <div className="mt-8 grid gap-3 sm:grid-cols-3">
                     <div className="client-panel-strong rounded-lg px-5 py-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-                        {t('rooms.price')}
+                        {t('rooms.price')} / {t('rooms.perNight')}
                       </p>
-                      <p className="mt-3 text-2xl font-semibold text-foreground">
-                        {formattedPrice}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {room.currency} / {t('rooms.perNight')}
-                      </p>
+                      <div className="mt-3 space-y-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t('rooms.singleGuest')}</p>
+                          <p className="text-xl font-semibold text-foreground">
+                            {formattedPrice} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                          </p>
+                        </div>
+                        {formattedPriceDouble && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">{t('rooms.doubleGuest')}</p>
+                            <p className="text-xl font-semibold text-foreground">
+                              {formattedPriceDouble} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="client-panel-strong rounded-lg px-5 py-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
@@ -254,6 +266,33 @@ export default function RoomDetailPage() {
                     </div>
                   </div>
                 </div>
+
+                {scenes.length > 0 && (
+                  <div className="client-panel rounded-lg p-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <span className="client-label">{t('rooms.virtualTour')}</span>
+                        <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
+                          {t('rooms.virtualTourSubtitle')}
+                        </p>
+                      </div>
+                      <Button className="h-11 rounded-lg px-6" onClick={() => setTourOpen(true)}>
+                        <Maximize2 className="h-4 w-4" />
+                        {t('rooms.virtualTour')}
+                      </Button>
+                    </div>
+
+                    <div className="mt-6">
+                      <Tour360Viewer
+                        scenes={scenes}
+                        initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
+                        heightClassName="h-[400px] md:h-[500px]"
+                        showThumbnails={false}
+                        showFullscreenButton={false}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {amenities.length > 0 && (
                   <div className="client-panel-strong rounded-lg p-8">
@@ -314,32 +353,6 @@ export default function RoomDetailPage() {
                   </div>
                 )}
 
-                {scenes.length > 0 && (
-                  <div className="client-panel rounded-lg p-6">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                      <div>
-                        <span className="client-label">{t('rooms.virtualTour')}</span>
-                        <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-                          {t('rooms.virtualTourSubtitle')}
-                        </p>
-                      </div>
-                      <Button className="h-11 rounded-lg px-6" onClick={() => setTourOpen(true)}>
-                        <Maximize2 className="h-4 w-4" />
-                        {t('rooms.virtualTour')}
-                      </Button>
-                    </div>
-
-                    <div className="mt-6">
-                      <Tour360Viewer
-                        scenes={scenes}
-                        initialSceneId={scenes.find((scene) => scene.isDefault)?.id}
-                        heightClassName="h-[400px] md:h-[500px]"
-                        showThumbnails={false}
-                        showFullscreenButton={false}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               <aside className="space-y-6">
@@ -347,12 +360,29 @@ export default function RoomDetailPage() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                     {t('rooms.featuredStay')}
                   </p>
-                  <p className="mt-4 text-3xl font-semibold text-foreground">
-                    {formattedPrice}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {room.currency} / {t('rooms.perNight')}
-                  </p>
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        {t('rooms.singleGuest')}
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                        {formattedPrice} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                      </p>
+                    </div>
+                    {formattedPriceDouble && (
+                      <div className="border-t client-divider pt-3">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {t('rooms.doubleGuest')}
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold text-foreground">
+                          {formattedPriceDouble} <span className="text-sm font-normal text-muted-foreground">{room.currency}</span>
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {t('rooms.perNight')}
+                    </p>
+                  </div>
 
                   <div className="mt-6 space-y-3">
                     <Button

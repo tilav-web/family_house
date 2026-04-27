@@ -21,6 +21,10 @@ export class CreateRoomDto {
   @IsNotEmpty()
   pricePerNight: number;
 
+  @IsNumber()
+  @IsOptional()
+  pricePerNightDouble?: number | null;
+
   @IsString()
   @IsOptional()
   currency?: string;

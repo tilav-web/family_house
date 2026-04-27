@@ -24,6 +24,9 @@ export class Room {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   pricePerNight: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  pricePerNightDouble: number | null;
+
   @Column({ type: 'varchar', default: 'USD' })
   currency: string;
 

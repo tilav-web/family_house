@@ -32,6 +32,8 @@
     "subtitle": "Comfortable and modern rooms for every guest",
     "price": "price",
     "perNight": "per night",
+    "singleGuest": "1 guest",
+    "doubleGuest": "2 guests",
     "currency": "UZS",
     "amenities": "Amenities",
     "viewDetails": "View Details",

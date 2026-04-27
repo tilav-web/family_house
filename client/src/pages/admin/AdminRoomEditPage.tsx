@@ -25,7 +25,8 @@ interface RoomFormValues {
   uz_name: string; ru_name: string; en_name: string
   uz_description: string; ru_description: string; en_description: string
   uz_amenities: string; ru_amenities: string; en_amenities: string
-  pricePerNight: number; currency: string; order: number; isActive: boolean
+  pricePerNight: number; pricePerNightDouble: number | null
+  currency: string; order: number; isActive: boolean
 }
 interface SceneFormValues {
   uz_title: string; ru_title: string; en_title: string
@@ -42,7 +43,8 @@ const roomDefaults: RoomFormValues = {
   uz_name: '', ru_name: '', en_name: '',
   uz_description: '', ru_description: '', en_description: '',
   uz_amenities: '', ru_amenities: '', en_amenities: '',
-  pricePerNight: 0, currency: 'UZS', order: 0, isActive: true,
+  pricePerNight: 0, pricePerNightDouble: null,
+  currency: 'UZS', order: 0, isActive: true,
 }
 const sceneDefaults: SceneFormValues = {
   uz_title: '', ru_title: '', en_title: '',
@@ -60,7 +62,9 @@ function toRoomForm(r?: Room | null): RoomFormValues {
     uz_name: r.name.uz, ru_name: r.name.ru, en_name: r.name.en,
     uz_description: r.description?.uz ?? '', ru_description: r.description?.ru ?? '', en_description: r.description?.en ?? '',
     uz_amenities: r.amenities?.uz ?? '', ru_amenities: r.amenities?.ru ?? '', en_amenities: r.amenities?.en ?? '',
-    pricePerNight: r.pricePerNight, currency: r.currency, order: r.order, isActive: r.isActive,
+    pricePerNight: Number(r.pricePerNight),
+    pricePerNightDouble: r.pricePerNightDouble != null ? Number(r.pricePerNightDouble) : null,
+    currency: r.currency, order: r.order, isActive: r.isActive,
   }
 }
 function toSceneForm(s?: PanoramaScene | null): SceneFormValues {
@@ -184,7 +188,9 @@ export default function AdminRoomEditPage() {
         name: { uz: d.uz_name, ru: d.ru_name, en: d.en_name },
         description: { uz: d.uz_description, ru: d.ru_description, en: d.en_description },
         amenities: { uz: d.uz_amenities, ru: d.ru_amenities, en: d.en_amenities },
-        pricePerNight: d.pricePerNight, currency: d.currency, order: d.order, isActive: d.isActive,
+        pricePerNight: d.pricePerNight,
+        pricePerNightDouble: d.pricePerNightDouble || null,
+        currency: d.currency, order: d.order, isActive: d.isActive,
       }
       return id ? roomsService.update(id, p) : roomsService.create(p)
     },
@@ -376,9 +382,11 @@ export default function AdminRoomEditPage() {
             ))}
           </Tabs>
 
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium">Narx (tuniga) <span className="text-red-400">*</span></label>
+              <label className="mb-1.5 block text-sm font-medium">
+                1 kishi uchun (tuniga) <span className="text-red-400">*</span>
+              </label>
               <Input
                 {...roomForm.register('pricePerNight', {
                   valueAsNumber: true,
@@ -386,12 +394,26 @@ export default function AdminRoomEditPage() {
                   min: { value: 0, message: "Narx 0 dan katta bo'lsin" },
                 })}
                 type="number"
-                placeholder="350000"
+                placeholder="500000"
               />
               {roomErrors.pricePerNight && (
                 <p className="mt-1 text-xs text-red-500">{roomErrors.pricePerNight.message}</p>
               )}
             </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">2 kishi uchun (tuniga)</label>
+              <Input
+                {...roomForm.register('pricePerNightDouble', {
+                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+                  min: { value: 0, message: "Narx 0 dan katta bo'lsin" },
+                })}
+                type="number"
+                placeholder="700000"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Valyuta</label>
               <Input {...roomForm.register('currency')} placeholder="UZS" />

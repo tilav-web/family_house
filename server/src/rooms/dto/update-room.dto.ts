@@ -20,6 +20,10 @@ export class UpdateRoomDto {
   @IsOptional()
   pricePerNight?: number;
 
+  @IsNumber()
+  @IsOptional()
+  pricePerNightDouble?: number | null;
+
   @IsString()
   @IsOptional()
   currency?: string;

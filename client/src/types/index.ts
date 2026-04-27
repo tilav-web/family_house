@@ -68,6 +68,7 @@ export interface Room {
   name: I18nField
   description: I18nField
   pricePerNight: number
+  pricePerNightDouble?: number | null
   currency: string
   amenities: I18nField
   thumbnailUrl?: string | null
@@ -84,6 +85,7 @@ export interface RoomPayload {
   description?: I18nField
   amenities?: I18nField
   pricePerNight: number
+  pricePerNightDouble?: number | null
   currency?: string
   thumbnailUrl?: string
   order?: number
@@ -139,6 +141,7 @@ export interface Testimonial {
   id: string
   authorName: string
   authorPhotoUrl?: string | null
+  authorCountry?: string | null
   text: I18nField
   rating: number
   order: number

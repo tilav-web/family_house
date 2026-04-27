@@ -6,6 +6,7 @@ import { Quote, Star } from 'lucide-react'
 import { testimonialsService } from '../../services/testimonials.service'
 import { Skeleton } from '../ui/skeleton'
 import { getLocalizedField } from '../../lib/i18n-field'
+import { getCountryFlagUrl } from '../../lib/countries'
 import { ScrollReveal } from '../shared/ScrollReveal'
 
 const swipeThreshold = 80
@@ -38,6 +39,7 @@ function TestimonialCard({
     id: string
     authorName: string
     authorPhotoUrl?: string | null
+    authorCountry?: string | null
     text: { uz: string; ru: string; en: string }
     rating: number
   }
@@ -81,7 +83,14 @@ function TestimonialCard({
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">
+          <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
+            {testimonial.authorCountry && getCountryFlagUrl(testimonial.authorCountry) && (
+              <img
+                src={getCountryFlagUrl(testimonial.authorCountry)!}
+                alt={testimonial.authorCountry.toUpperCase()}
+                className="h-4 w-6 shrink-0 rounded-sm border border-[var(--client-line)] object-cover"
+              />
+            )}
             {testimonial.authorName}
           </p>
           <p className="mt-1 text-xs uppercase tracking-[0.14em] text-muted-foreground">
@@ -240,7 +249,14 @@ export function TestimonialsSection() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">
+                        <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
+                          {activeMobileTestimonial.authorCountry && getCountryFlagUrl(activeMobileTestimonial.authorCountry) && (
+                            <img
+                              src={getCountryFlagUrl(activeMobileTestimonial.authorCountry)!}
+                              alt={activeMobileTestimonial.authorCountry.toUpperCase()}
+                              className="h-4 w-6 shrink-0 rounded-sm border border-[var(--client-line)] object-cover"
+                            />
+                          )}
                           {activeMobileTestimonial.authorName}
                         </p>
                         <p className="mt-1 text-xs uppercase tracking-[0.14em] text-muted-foreground">

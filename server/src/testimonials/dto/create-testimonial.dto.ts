@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  Length,
   Min,
   Max,
 } from 'class-validator';
@@ -18,6 +19,11 @@ export class CreateTestimonialDto {
   @IsString()
   @IsOptional()
   authorPhotoUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  @Length(2, 2)
+  authorCountry?: string;
 
   @IsObject()
   @IsNotEmpty()
