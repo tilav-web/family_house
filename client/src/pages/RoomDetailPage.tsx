@@ -71,7 +71,7 @@ export default function RoomDetailPage() {
     if (images.length <= 1 || tourOpen || lightboxOpen) return
     const interval = setInterval(() => {
       setSelectedImg((current) => (current + 1) % images.length)
-    }, 1000)
+    }, 4000)
     return () => clearInterval(interval)
   }, [images.length, tourOpen, lightboxOpen])
 
