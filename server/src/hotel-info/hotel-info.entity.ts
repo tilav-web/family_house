@@ -35,8 +35,8 @@ export class HotelInfo {
   @Column({ type: 'jsonb', nullable: true })
   heroSubtext: I18nField;
 
-  @Column({ type: 'varchar', nullable: true })
-  phoneNumber: string;
+  @Column({ type: 'jsonb', nullable: true })
+  phoneNumbers: string[] | null;
 
   @Column({ type: 'double precision', nullable: true })
   latitude: number;

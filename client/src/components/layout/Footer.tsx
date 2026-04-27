@@ -37,7 +37,9 @@ export function Footer() {
     queryKey: ['hotelInfo'],
     queryFn: () => hotelInfoService.getInfo(),
   })
-  const phoneNumber = hotelInfo?.phoneNumber || t('contact.phoneNumber')
+  const phoneNumbers = (hotelInfo?.phoneNumbers && hotelInfo.phoneNumbers.length > 0)
+    ? hotelInfo.phoneNumbers
+    : [t('contact.phoneNumber')]
 
   const scrollTo = (href: string) => {
     if (isHomePage) {
@@ -104,11 +106,19 @@ export function Footer() {
                 <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <span className="text-sm text-white/62">{t('contact.address')}</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-primary shrink-0" />
-                <a href={`tel:${phoneNumber.replace(/\s/g, '')}`} className="text-sm text-white/62 transition-colors hover:text-white">
-                  {phoneNumber}
-                </a>
+              <li className="flex items-start gap-3">
+                <Phone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
+                  {phoneNumbers.map((p) => (
+                    <a
+                      key={p}
+                      href={`tel:${p.replace(/\s/g, '')}`}
+                      className="text-sm text-white/62 transition-colors hover:text-white"
+                    >
+                      {p}
+                    </a>
+                  ))}
+                </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary shrink-0" />

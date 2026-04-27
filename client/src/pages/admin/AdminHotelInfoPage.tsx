@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { MapPin } from 'lucide-react'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { MapPin, Plus, Trash2 } from 'lucide-react'
 import { hotelInfoService } from '../../services/hotel-info.service'
 import type { HotelInfo } from '../../types'
 import { Button } from '../../components/ui/button'
@@ -21,7 +21,7 @@ interface HotelInfoFormValues {
   uz_heroSubtext: string
   ru_heroSubtext: string
   en_heroSubtext: string
-  phoneNumber: string
+  phoneNumbers: { value: string }[]
   mapEmbedUrl: string
   latitude: string
   longitude: string
@@ -38,7 +38,7 @@ const defaultValues: HotelInfoFormValues = {
   uz_heroSubtext: '',
   ru_heroSubtext: '',
   en_heroSubtext: '',
-  phoneNumber: '',
+  phoneNumbers: [{ value: '' }],
   mapEmbedUrl: '',
   latitude: '',
   longitude: '',
@@ -60,7 +60,9 @@ function toFormValues(hotelInfo?: HotelInfo | null): HotelInfoFormValues {
     uz_heroSubtext: hotelInfo.heroSubtext?.uz ?? '',
     ru_heroSubtext: hotelInfo.heroSubtext?.ru ?? '',
     en_heroSubtext: hotelInfo.heroSubtext?.en ?? '',
-    phoneNumber: hotelInfo.phoneNumber ?? '',
+    phoneNumbers: hotelInfo.phoneNumbers && hotelInfo.phoneNumbers.length > 0
+      ? hotelInfo.phoneNumbers.map((value) => ({ value }))
+      : [{ value: '' }],
     mapEmbedUrl: hotelInfo.mapEmbedUrl ?? '',
     latitude: hotelInfo.latitude?.toString() ?? '',
     longitude: hotelInfo.longitude?.toString() ?? '',
@@ -91,9 +93,10 @@ export default function AdminHotelInfoPage() {
 
   const [uploadingField, setUploadingField] = useState<string | null>(null)
 
-  const { register, handleSubmit, reset, watch } = useForm<HotelInfoFormValues>({
+  const { register, handleSubmit, reset, watch, control } = useForm<HotelInfoFormValues>({
     defaultValues,
   })
+  const phoneFields = useFieldArray({ control, name: 'phoneNumbers' })
 
   const watchedLat = watch('latitude')
   const watchedLng = watch('longitude')
@@ -127,7 +130,9 @@ export default function AdminHotelInfoPage() {
           ru: data.ru_heroSubtext,
           en: data.en_heroSubtext,
         },
-        phoneNumber: data.phoneNumber || undefined,
+        phoneNumbers: data.phoneNumbers
+          .map((p) => p.value.trim())
+          .filter((v) => v.length > 0),
         mapEmbedUrl: data.mapEmbedUrl ? extractIframeSrc(data.mapEmbedUrl) : undefined,
         latitude: isNaN(lat) ? undefined : lat,
         longitude: isNaN(lng) ? undefined : lng,
@@ -215,18 +220,43 @@ export default function AdminHotelInfoPage() {
 
         {/* Aloqa ma'lumotlari */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Aloqa ma'lumotlari</h2>
-          <div>
-            <label className="mb-2 block text-sm font-medium">Telefon raqam</label>
-            <Input
-              {...register('phoneNumber')}
-              placeholder="+998 90 123 45 67"
-              type="tel"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Saytning header va footer qismida ko'rsatiladi
-            </p>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Aloqa ma'lumotlari</h2>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => phoneFields.append({ value: '' })}
+              className="gap-1.5"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Raqam qo'shish
+            </Button>
           </div>
+          <label className="mb-2 block text-sm font-medium">Telefon raqamlar</label>
+          <div className="space-y-2">
+            {phoneFields.fields.map((field, index) => (
+              <div key={field.id} className="flex items-center gap-2">
+                <Input
+                  {...register(`phoneNumbers.${index}.value`)}
+                  placeholder="+998 90 123 45 67"
+                  type="tel"
+                />
+                <button
+                  type="button"
+                  onClick={() => phoneFields.remove(index)}
+                  disabled={phoneFields.fields.length <= 1}
+                  title="O'chirish"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Bir nechta raqam qo'shishingiz mumkin. Header va footer'da hammasi ko'rinadi.
+          </p>
         </div>
 
         {/* Statistika */}

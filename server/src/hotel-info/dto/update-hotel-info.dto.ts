@@ -1,4 +1,4 @@
-import { IsOptional, IsObject, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsObject, IsNumber, IsString } from 'class-validator';
 import type { I18nField } from '../../common/types/i18n-field.type';
 
 export class UpdateHotelInfoDto {
@@ -13,8 +13,9 @@ export class UpdateHotelInfoDto {
   heroSubtext?: I18nField;
 
   @IsOptional()
-  @IsString()
-  phoneNumber?: string;
+  @IsArray()
+  @IsString({ each: true })
+  phoneNumbers?: string[];
 
   @IsOptional()
   @IsString()

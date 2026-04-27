@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Phone } from 'lucide-react'
+import { Menu, X, Phone, ChevronDown } from 'lucide-react'
 import { Logo } from './Logo'
 import { hotelInfoService } from '../../services/hotel-info.service'
 import { PaletteToggle, type ClientThemeMode } from '../shared/PaletteToggle'
@@ -34,7 +34,21 @@ export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
     queryKey: ['hotelInfo'],
     queryFn: () => hotelInfoService.getInfo(),
   })
-  const phoneNumber = hotelInfo?.phoneNumber || t('contact.phoneNumber')
+  const phoneNumbers = (hotelInfo?.phoneNumbers && hotelInfo.phoneNumbers.length > 0)
+    ? hotelInfo.phoneNumbers
+    : [t('contact.phoneNumber')]
+  const [phoneOpen, setPhoneOpen] = useState(false)
+  const phoneMenuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!phoneOpen) return
+    const onDocClick = (e: MouseEvent) => {
+      if (!phoneMenuRef.current) return
+      if (!phoneMenuRef.current.contains(e.target as Node)) setPhoneOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [phoneOpen])
 
   useEffect(() => {
     if (!isHomePage) return
@@ -122,19 +136,57 @@ export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
 
             {/* Phone + Language + Mobile toggle */}
             <div className="flex items-center gap-2">
-              {/* Phone call button */}
-              <a
-                href={`tel:${phoneNumber.replace(/\s/g, '')}`}
-                aria-label={phoneNumber}
-                className={`group hidden sm:flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-all ${
-                  scrolled
-                    ? 'border-[var(--client-line)] bg-background/80 text-foreground hover:border-primary hover:text-primary'
-                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
-                } backdrop-blur-md`}
+              {/* Phone dropdown */}
+              <div
+                ref={phoneMenuRef}
+                className="relative hidden sm:block"
+                onMouseEnter={() => setPhoneOpen(true)}
+                onMouseLeave={() => setPhoneOpen(false)}
               >
-                <Phone className="h-4 w-4 transition-transform group-hover:animate-phone-ring" />
-                <span className="text-xs font-semibold tracking-wide">{phoneNumber}</span>
-              </a>
+                <button
+                  type="button"
+                  onClick={() => setPhoneOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={phoneOpen}
+                  aria-label={t('contact.phoneLabel')}
+                  className={`group flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-all ${
+                    scrolled
+                      ? 'border-[var(--client-line)] bg-background/80 text-foreground hover:border-primary hover:text-primary'
+                      : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+                  } backdrop-blur-md`}
+                >
+                  <Phone className="h-4 w-4 transition-transform group-hover:animate-phone-ring" />
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${phoneOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {phoneOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      role="menu"
+                      className="absolute right-0 top-full z-50 mt-2 min-w-[14rem] overflow-hidden rounded-lg border border-[var(--client-line)] bg-background shadow-[0_18px_42px_var(--client-shadow)]"
+                    >
+                      {phoneNumbers.map((p) => (
+                        <a
+                          key={p}
+                          href={`tel:${p.replace(/\s/g, '')}`}
+                          onClick={() => setPhoneOpen(false)}
+                          role="menuitem"
+                          className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                        >
+                          <Phone className="h-3.5 w-3.5 text-primary" />
+                          {p}
+                        </a>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Theme toggle (Sun/Moon) */}
               {palette && onTogglePalette && (

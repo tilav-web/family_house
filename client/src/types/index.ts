@@ -186,7 +186,7 @@ export interface HotelInfo {
   heroPosterMobile?: string | null
   heroText?: I18nField | null
   heroSubtext?: I18nField | null
-  phoneNumber?: string | null
+  phoneNumbers?: string[] | null
   latitude?: number | null
   longitude?: number | null
   mapEmbedUrl?: string | null
