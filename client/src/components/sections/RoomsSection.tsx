@@ -75,13 +75,6 @@ export function RoomsSection() {
               .filter(Boolean)
               .slice(0, 3)
             const sceneCount = room.scenes?.filter((scene: { isActive: boolean }) => scene.isActive).length ?? 0
-            const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
-            const pricedTiers = (room.priceTiers ?? []).filter(
-              (t): t is { guests: string; price: number } => t.price != null && Number.isFinite(Number(t.price)),
-            )
-            const lowestPrice = pricedTiers.length > 0
-              ? pricedTiers.reduce((min, t) => (Number(t.price) < Number(min.price) ? t : min)).price
-              : null
 
             return (
               <StaggerItem key={room.id}>
@@ -108,11 +101,6 @@ export function RoomsSection() {
                         </div>
                       )}
 
-                      {lowestPrice != null && (
-                        <div className="absolute bottom-4 left-4 max-w-[80%] rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_14px_32px_var(--client-shadow)]">
-                          {Number(lowestPrice).toLocaleString(locale)} {room.currency}
-                        </div>
-                      )}
                     </div>
 
                     <div className="p-6">
