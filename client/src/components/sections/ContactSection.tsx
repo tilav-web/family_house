@@ -2,12 +2,11 @@ import { useTranslation } from 'react-i18next'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Send, Phone, Mail, MapPin } from 'lucide-react'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { contactsService } from '../../services/contacts.service'
-import { hotelInfoService } from '../../services/hotel-info.service'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
@@ -26,14 +25,6 @@ type ContactFormData = z.infer<typeof contactSchema>
 export function ContactSection() {
   const { t, i18n } = useTranslation()
   const { toast } = useToast()
-
-  const { data: hotelInfo } = useQuery({
-    queryKey: ['hotelInfo'],
-    queryFn: () => hotelInfoService.getInfo(),
-  })
-  const phoneNumbers = (hotelInfo?.phoneNumbers && hotelInfo.phoneNumbers.length > 0)
-    ? hotelInfo.phoneNumbers
-    : [t('contact.phoneNumber')]
 
   const {
     register,
@@ -111,19 +102,9 @@ export function ContactSection() {
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <Phone className="h-5 w-5 text-primary" />
               </div>
-              <div className="min-w-0">
+              <div>
                 <h3 className="font-semibold text-foreground">{t('contact.phoneLabel')}</h3>
-                <div className="mt-1 flex flex-col gap-0.5">
-                  {phoneNumbers.map((p) => (
-                    <a
-                      key={p}
-                      href={`tel:${p.replace(/\s/g, '')}`}
-                      className="text-muted-foreground text-sm transition-colors hover:text-primary"
-                    >
-                      {p}
-                    </a>
-                  ))}
-                </div>
+                <p className="text-muted-foreground text-sm mt-1">{t('contact.phoneNumber')}</p>
               </div>
             </div>
 
