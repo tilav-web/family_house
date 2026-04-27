@@ -139,7 +139,7 @@ export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
               {/* Phone dropdown */}
               <div
                 ref={phoneMenuRef}
-                className="relative hidden sm:block"
+                className="relative"
                 onMouseEnter={() => setPhoneOpen(true)}
                 onMouseLeave={() => setPhoneOpen(false)}
               >
@@ -149,7 +149,7 @@ export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
                   aria-haspopup="menu"
                   aria-expanded={phoneOpen}
                   aria-label={t('contact.phoneLabel')}
-                  className={`group flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-all ${
+                  className={`group flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 transition-all sm:gap-2 sm:px-3 ${
                     scrolled
                       ? 'border-[var(--client-line)] bg-background/80 text-foreground hover:border-primary hover:text-primary'
                       : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
@@ -284,6 +284,26 @@ export function Header({ palette, onTogglePalette }: HeaderProps = {}) {
                     </motion.a>
                   ))}
                 </nav>
+
+                {/* Mobile phone numbers */}
+                <div className="mb-3 space-y-2">
+                  <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {t('contact.phoneLabel')}
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {phoneNumbers.map((p) => (
+                      <a
+                        key={p}
+                        href={`tel:${p.replace(/\s/g, '')}`}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 rounded-lg border border-[var(--client-line)] bg-background/80 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                      >
+                        <Phone className="h-4 w-4 text-primary" />
+                        {p}
+                      </a>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Mobile language switcher */}
                 <div className="flex items-center gap-2 rounded-lg border border-[var(--client-line)] bg-background/80 p-1">
