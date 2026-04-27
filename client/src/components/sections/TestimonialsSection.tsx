@@ -88,7 +88,7 @@ function TestimonialCard({
               <img
                 src={getCountryFlagUrl(testimonial.authorCountry)!}
                 alt={testimonial.authorCountry.toUpperCase()}
-                className="h-4 w-6 shrink-0 rounded-sm border border-[var(--client-line)] object-cover"
+                className="h-4 w-6 shrink-0 rounded-sm object-cover"
               />
             )}
             {testimonial.authorName}
@@ -254,7 +254,7 @@ export function TestimonialsSection() {
                             <img
                               src={getCountryFlagUrl(activeMobileTestimonial.authorCountry)!}
                               alt={activeMobileTestimonial.authorCountry.toUpperCase()}
-                              className="h-4 w-6 shrink-0 rounded-sm border border-[var(--client-line)] object-cover"
+                              className="h-4 w-6 shrink-0 rounded-sm object-cover"
                             />
                           )}
                           {activeMobileTestimonial.authorName}
