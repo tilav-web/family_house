@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import {
   Plus, Trash2, ImagePlus, Pencil, Upload, ArrowRight,
   ChevronLeft, Navigation, Info, Camera, Layers,
   CheckCircle2, X, Eye, EyeOff, Star, MousePointerClick,
 } from 'lucide-react'
 import { roomsService } from '../../services/rooms.service'
-import type { PanoramaHotspot, PanoramaScene, Room, RoomPayload } from '../../types'
+import type { PanoramaHotspot, PanoramaScene, PriceTier, Room, RoomPayload } from '../../types'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
@@ -25,7 +25,7 @@ interface RoomFormValues {
   uz_name: string; ru_name: string; en_name: string
   uz_description: string; ru_description: string; en_description: string
   uz_amenities: string; ru_amenities: string; en_amenities: string
-  pricePerNight: number; pricePerNightDouble: number | null
+  priceTiers: PriceTier[]
   currency: string; order: number; isActive: boolean
 }
 interface SceneFormValues {
@@ -43,7 +43,7 @@ const roomDefaults: RoomFormValues = {
   uz_name: '', ru_name: '', en_name: '',
   uz_description: '', ru_description: '', en_description: '',
   uz_amenities: '', ru_amenities: '', en_amenities: '',
-  pricePerNight: 0, pricePerNightDouble: null,
+  priceTiers: [{ guests: 1, price: 0 }],
   currency: 'UZS', order: 0, isActive: true,
 }
 const sceneDefaults: SceneFormValues = {
@@ -58,12 +58,14 @@ const hotspotDefaults: HotspotFormValues = {
 
 function toRoomForm(r?: Room | null): RoomFormValues {
   if (!r) return roomDefaults
+  const tiers = (r.priceTiers && r.priceTiers.length > 0)
+    ? r.priceTiers.map((t) => ({ guests: Number(t.guests), price: Number(t.price) }))
+    : [{ guests: 1, price: Number(r.pricePerNight) || 0 }]
   return {
     uz_name: r.name.uz, ru_name: r.name.ru, en_name: r.name.en,
     uz_description: r.description?.uz ?? '', ru_description: r.description?.ru ?? '', en_description: r.description?.en ?? '',
     uz_amenities: r.amenities?.uz ?? '', ru_amenities: r.amenities?.ru ?? '', en_amenities: r.amenities?.en ?? '',
-    pricePerNight: Number(r.pricePerNight),
-    pricePerNightDouble: r.pricePerNightDouble != null ? Number(r.pricePerNightDouble) : null,
+    priceTiers: tiers,
     currency: r.currency, order: r.order, isActive: r.isActive,
   }
 }
@@ -145,6 +147,7 @@ export default function AdminRoomEditPage() {
   )
 
   const roomForm = useForm<RoomFormValues>({ defaultValues: roomDefaults })
+  const tierFields = useFieldArray({ control: roomForm.control, name: 'priceTiers' })
   const sceneForm = useForm<SceneFormValues>({ defaultValues: sceneDefaults })
   const hotspotForm = useForm<HotspotFormValues>({ defaultValues: hotspotDefaults })
   const { errors: roomErrors } = roomForm.formState
@@ -184,12 +187,19 @@ export default function AdminRoomEditPage() {
   // ─── Mutations ───
   const { mutate: saveRoom, isPending: savingRoom } = useMutation({
     mutationFn: (d: RoomFormValues) => {
+      const sortedTiers = [...d.priceTiers]
+        .filter((t) => t.guests > 0 && t.price >= 0)
+        .map((t) => ({ guests: Number(t.guests), price: Number(t.price) }))
+        .sort((a, b) => a.guests - b.guests)
+      const basePrice = sortedTiers.length > 0
+        ? sortedTiers[0].price
+        : 0
       const p: RoomPayload = {
         name: { uz: d.uz_name, ru: d.ru_name, en: d.en_name },
         description: { uz: d.uz_description, ru: d.ru_description, en: d.en_description },
         amenities: { uz: d.uz_amenities, ru: d.ru_amenities, en: d.en_amenities },
-        pricePerNight: d.pricePerNight,
-        pricePerNightDouble: d.pricePerNightDouble || null,
+        pricePerNight: basePrice,
+        priceTiers: sortedTiers,
         currency: d.currency, order: d.order, isActive: d.isActive,
       }
       return id ? roomsService.update(id, p) : roomsService.create(p)
@@ -382,35 +392,80 @@ export default function AdminRoomEditPage() {
             ))}
           </Tabs>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                1 kishi uchun (tuniga) <span className="text-red-400">*</span>
-              </label>
-              <Input
-                {...roomForm.register('pricePerNight', {
-                  valueAsNumber: true,
-                  required: 'Narx majburiy',
-                  min: { value: 0, message: "Narx 0 dan katta bo'lsin" },
-                })}
-                type="number"
-                placeholder="500000"
-              />
-              {roomErrors.pricePerNight && (
-                <p className="mt-1 text-xs text-red-500">{roomErrors.pricePerNight.message}</p>
-              )}
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Narx variantlari (tuniga) <span className="text-red-400">*</span></p>
+                <p className="text-xs text-muted-foreground">
+                  Har bir mehmon soni uchun alohida narx kiriting. Masalan: 1 kishi — 300 000, 2 kishi — 500 000
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const last = tierFields.fields[tierFields.fields.length - 1]
+                  const nextGuests = last ? Number((last as unknown as PriceTier).guests || 0) + 1 : 1
+                  tierFields.append({ guests: nextGuests, price: 0 })
+                }}
+                className="gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Yana qo'shish
+              </Button>
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">2 kishi uchun (tuniga)</label>
-              <Input
-                {...roomForm.register('pricePerNightDouble', {
-                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-                  min: { value: 0, message: "Narx 0 dan katta bo'lsin" },
-                })}
-                type="number"
-                placeholder="700000"
-              />
+
+            {tierFields.fields.length === 0 && (
+              <p className="text-sm text-muted-foreground italic py-3">
+                Hech bo'lmaganda 1 ta narx variant qo'shing
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {tierFields.fields.map((field, index) => (
+                <div key={field.id} className="flex items-end gap-2">
+                  <div className="w-28">
+                    <label className="mb-1 block text-xs text-muted-foreground">Kishi soni</label>
+                    <Input
+                      {...roomForm.register(`priceTiers.${index}.guests`, {
+                        valueAsNumber: true,
+                        required: true,
+                        min: 1,
+                      })}
+                      type="number"
+                      min={1}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs text-muted-foreground">Narx (tuniga)</label>
+                    <Input
+                      {...roomForm.register(`priceTiers.${index}.price`, {
+                        valueAsNumber: true,
+                        required: true,
+                        min: 0,
+                      })}
+                      type="number"
+                      min={0}
+                      placeholder="500000"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => tierFields.remove(index)}
+                    disabled={tierFields.fields.length <= 1}
+                    title="O'chirish"
+                    className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
+            {roomErrors.priceTiers && (
+              <p className="mt-2 text-xs text-red-500">Iltimos har bir variantni to'g'ri to'ldiring</p>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">

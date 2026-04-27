@@ -4,8 +4,12 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import type { I18nField } from '../../common/types/i18n-field.type';
+import { PriceTierDto } from './create-room.dto';
 
 export class UpdateRoomDto {
   @IsObject()
@@ -23,6 +27,12 @@ export class UpdateRoomDto {
   @IsNumber()
   @IsOptional()
   pricePerNightDouble?: number | null;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => PriceTierDto)
+  priceTiers?: PriceTierDto[] | null;
 
   @IsString()
   @IsOptional()

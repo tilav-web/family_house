@@ -27,6 +27,9 @@ export class Room {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   pricePerNightDouble: number | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  priceTiers: Array<{ guests: number; price: number }> | null;
+
   @Column({ type: 'varchar', default: 'USD' })
   currency: string;
 

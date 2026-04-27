@@ -5,7 +5,21 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  IsArray,
+  ValidateNested,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class PriceTierDto {
+  @IsNumber()
+  @Min(1)
+  guests: number;
+
+  @IsNumber()
+  @Min(0)
+  price: number;
+}
 import type { I18nField } from '../../common/types/i18n-field.type';
 
 export class CreateRoomDto {
@@ -24,6 +38,12 @@ export class CreateRoomDto {
   @IsNumber()
   @IsOptional()
   pricePerNightDouble?: number | null;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => PriceTierDto)
+  priceTiers?: PriceTierDto[] | null;
 
   @IsString()
   @IsOptional()

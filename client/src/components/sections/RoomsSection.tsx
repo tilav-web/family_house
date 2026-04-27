@@ -76,10 +76,9 @@ export function RoomsSection() {
               .slice(0, 3)
             const sceneCount = room.scenes?.filter((scene: { isActive: boolean }) => scene.isActive).length ?? 0
             const locale = i18n.language === 'uz' ? 'uz-UZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US'
-            const formattedPrice = Number(room.pricePerNight).toLocaleString(locale)
-            const formattedPriceDouble = room.pricePerNightDouble != null
-              ? Number(room.pricePerNightDouble).toLocaleString(locale)
-              : null
+            const tiers = (room.priceTiers && room.priceTiers.length > 0)
+              ? [...room.priceTiers].sort((a, b) => a.guests - b.guests)
+              : [{ guests: 1, price: Number(room.pricePerNight) || 0 }]
 
             return (
               <StaggerItem key={room.id}>
@@ -106,21 +105,15 @@ export function RoomsSection() {
                         </div>
                       )}
 
-                      <div className="absolute bottom-4 left-4 flex flex-col gap-1 rounded-lg bg-primary px-4 py-2 text-primary-foreground shadow-[0_14px_32px_var(--client-shadow)]">
-                        <div className="flex items-baseline gap-1.5 text-sm font-semibold">
-                          <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/80">
-                            {t('rooms.singleGuest')}
-                          </span>
-                          <span>{formattedPrice} {room.currency}</span>
-                        </div>
-                        {formattedPriceDouble && (
-                          <div className="flex items-baseline gap-1.5 text-sm font-semibold">
+                      <div className="absolute bottom-4 left-4 flex max-w-[80%] flex-col gap-0.5 rounded-lg bg-primary px-4 py-2 text-primary-foreground shadow-[0_14px_32px_var(--client-shadow)]">
+                        {tiers.map((tier) => (
+                          <div key={tier.guests} className="flex items-baseline gap-2 text-sm font-semibold">
                             <span className="text-[10px] font-medium uppercase tracking-wider text-primary-foreground/80">
-                              {t('rooms.doubleGuest')}
+                              {tier.guests} {t('rooms.guestsLabel')}
                             </span>
-                            <span>{formattedPriceDouble} {room.currency}</span>
+                            <span>{Number(tier.price).toLocaleString(locale)} {room.currency}</span>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
 
