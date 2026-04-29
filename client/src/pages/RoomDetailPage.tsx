@@ -19,6 +19,20 @@ import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { Tour360Viewer } from '../components/Tour360Viewer'
 import { Footer } from '../components/layout/Footer'
+import { Seo } from '../components/Seo'
+
+const SITE_URL = 'https://hotel-familyhouse.uz'
+
+function truncate(text: string, max = 160): string {
+  const clean = text.replace(/\s+/g, ' ').trim()
+  return clean.length <= max ? clean : `${clean.slice(0, max - 1).trimEnd()}…`
+}
+
+function absoluteUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
 
 function splitAmenities(text: string): string[] {
   return text
@@ -130,8 +144,91 @@ export default function RoomDetailPage() {
     }))
     .sort((a, b) => guestsSortKey(a.guests) - guestsSortKey(b.guests))
 
+  const seoTitle = i18n.language === 'ru'
+    ? `${name} — номер в гостинице Family House Карши`
+    : i18n.language === 'en'
+      ? `${name} — room at Family House hotel in Karshi`
+      : `${name} — Qarshi mehmonxonasi xonasi | Family House`
+  const seoDescription = truncate(
+    description || `${name} — Family House Qarshi mehmonxonasi. Qulay xona, 360° virtual tur, oilaviy gostinitsa.`,
+  )
+  const seoImage = absoluteUrl(room.thumbnailUrl) || absoluteUrl(images[0]?.url)
+  const lowestPrice = tiers
+    .map((tier) => tier.price)
+    .filter((value): value is number => typeof value === 'number')
+    .sort((a, b) => a - b)[0]
+
+  const roomJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'HotelRoom',
+    name,
+    description: seoDescription,
+    url: `${SITE_URL}/rooms/${room.id}`,
+    ...(seoImage ? { image: seoImage } : {}),
+    ...(amenities.length > 0
+      ? {
+          amenityFeature: amenities.map((item) => ({
+            '@type': 'LocationFeatureSpecification',
+            name: item,
+            value: true,
+          })),
+        }
+      : {}),
+    containedInPlace: {
+      '@type': 'Hotel',
+      '@id': `${SITE_URL}/#hotel`,
+      name: 'Family House',
+      url: SITE_URL,
+    },
+    ...(lowestPrice
+      ? {
+          offers: {
+            '@type': 'Offer',
+            price: lowestPrice,
+            priceCurrency: room.currency || 'UZS',
+            availability: 'https://schema.org/InStock',
+            url: `${SITE_URL}/rooms/${room.id}`,
+          },
+        }
+      : {}),
+  }
+
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Family House',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: t('rooms.title') || 'Xonalar',
+        item: `${SITE_URL}/#rooms`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name,
+        item: `${SITE_URL}/rooms/${room.id}`,
+      },
+    ],
+  }
+
   return (
     <>
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        path={`/rooms/${room.id}`}
+        image={seoImage}
+        type="product"
+        locale={i18n.language}
+        jsonLd={[roomJsonLd, breadcrumbJsonLd]}
+      />
       <div className="min-h-screen bg-background pt-16 md:pt-20">
         <section className="client-section overflow-hidden pb-24">
           <div className="client-grid" />

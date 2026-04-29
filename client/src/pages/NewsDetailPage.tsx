@@ -9,6 +9,20 @@ import { Skeleton } from '../components/ui/skeleton'
 import { getLocalizedField } from '../lib/i18n-field'
 import { LexicalRenderer } from '../components/editor/LexicalRenderer'
 import { Footer } from '../components/layout/Footer'
+import { Seo } from '../components/Seo'
+
+const SITE_URL = 'https://hotel-familyhouse.uz'
+
+function truncate(text: string, max = 160): string {
+  const clean = text.replace(/\s+/g, ' ').trim()
+  return clean.length <= max ? clean : `${clean.slice(0, max - 1).trimEnd()}…`
+}
+
+function absoluteUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
 
 export default function NewsDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -78,8 +92,62 @@ export default function NewsDetailPage() {
     await navigator.clipboard.writeText(window.location.href)
   }
 
+  const seoDescription = truncate(
+    excerpt || content || `${title} — Family House Qarshi mehmonxonasi yangiliklari.`,
+  )
+  const seoImage = absoluteUrl(news.thumbnailUrl)
+
+  const articleJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: title,
+    description: seoDescription,
+    url: `${SITE_URL}/news/${news.id}`,
+    datePublished: news.createdAt,
+    dateModified: news.updatedAt || news.createdAt,
+    inLanguage: i18n.language,
+    ...(seoImage ? { image: [seoImage] } : {}),
+    author: {
+      '@type': 'Organization',
+      name: 'Family House',
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Family House',
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/favicon.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/news/${news.id}`,
+    },
+  }
+
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Family House', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: t('news.label') || 'Yangiliklar', item: `${SITE_URL}/#news` },
+      { '@type': 'ListItem', position: 3, name: title, item: `${SITE_URL}/news/${news.id}` },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-background pt-16 md:pt-20">
+      <Seo
+        title={`${title} — Family House Qarshi`}
+        description={seoDescription}
+        path={`/news/${news.id}`}
+        image={seoImage}
+        type="article"
+        locale={i18n.language}
+        jsonLd={[articleJsonLd, breadcrumbJsonLd]}
+      />
       <section className="client-section overflow-hidden pb-24">
         <div className="client-grid" />
 
