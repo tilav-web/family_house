@@ -70,6 +70,7 @@ export interface PriceTier {
 
 export interface Room {
   id: string
+  slug?: string | null
   name: I18nField
   description: I18nField
   priceTiers?: PriceTier[] | null
@@ -131,6 +132,7 @@ export interface Service {
 
 export interface News {
   id: string
+  slug?: string | null
   title: I18nField
   excerpt: I18nField
   content: I18nField

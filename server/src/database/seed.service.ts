@@ -1,12 +1,13 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { HotelInfo } from '../hotel-info/hotel-info.entity';
 import { Service } from '../services/service.entity';
 import { Room } from '../rooms/entities/room.entity';
 import { News } from '../news/news.entity';
 import { Testimonial } from '../testimonials/testimonial.entity';
 import { Video } from '../videos/video.entity';
+import { pickSlugSource, slugify } from '../common/utils/slugify.util';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -25,10 +26,14 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly testimonialRepo: Repository<Testimonial>,
     @InjectRepository(Video)
     private readonly videoRepo: Repository<Video>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async onApplicationBootstrap() {
     try {
+      await this.ensureSlugColumns();
+      await this.backfillSlugs();
+
       const hotelInfoCount = await this.hotelInfoRepo.count();
       if (hotelInfoCount > 0) {
         this.logger.log('Database already has data, skipping seed');
@@ -47,6 +52,59 @@ export class SeedService implements OnApplicationBootstrap {
       this.logger.log('Database seeding completed!');
     } catch (error) {
       this.logger.error('Seeding failed:', error);
+    }
+  }
+
+  private async ensureSlugColumns() {
+    await this.dataSource.query(
+      `ALTER TABLE rooms ADD COLUMN IF NOT EXISTS slug varchar(120)`,
+    );
+    await this.dataSource.query(
+      `ALTER TABLE news ADD COLUMN IF NOT EXISTS slug varchar(120)`,
+    );
+    await this.dataSource.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_rooms_slug ON rooms(slug) WHERE slug IS NOT NULL`,
+    );
+    await this.dataSource.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug) WHERE slug IS NOT NULL`,
+    );
+  }
+
+  private async backfillSlugs() {
+    const roomsMissing = await this.roomRepo.find({ where: { slug: IsNull() } });
+    for (const room of roomsMissing) {
+      room.slug = await this.uniqueSlug(this.roomRepo, pickSlugSource(room.name) || 'room');
+      await this.roomRepo.save(room);
+    }
+    if (roomsMissing.length) {
+      this.logger.log(`  ✓ Backfilled slugs for ${roomsMissing.length} rooms`);
+    }
+
+    const newsMissing = await this.newsRepo.find({ where: { slug: IsNull() } });
+    for (const item of newsMissing) {
+      item.slug = await this.uniqueSlug(this.newsRepo, pickSlugSource(item.title) || 'news');
+      await this.newsRepo.save(item);
+    }
+    if (newsMissing.length) {
+      this.logger.log(`  ✓ Backfilled slugs for ${newsMissing.length} news items`);
+    }
+  }
+
+  private async uniqueSlug<T extends { id: string; slug: string | null }>(
+    repo: Repository<T>,
+    source: string,
+  ): Promise<string> {
+    const base = slugify(source) || 'item';
+    let candidate = base;
+    let counter = 2;
+    while (true) {
+      const existing = await repo
+        .createQueryBuilder('e')
+        .where('e.slug = :slug', { slug: candidate })
+        .getOne();
+      if (!existing) return candidate;
+      candidate = `${base}-${counter}`;
+      counter += 1;
     }
   }
 

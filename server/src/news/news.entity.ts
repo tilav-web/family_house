@@ -12,6 +12,9 @@ export class News {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'varchar', length: 120, unique: true, nullable: true })
+  slug: string | null;
+
   @Column({ type: 'jsonb' })
   title: I18nField;
 

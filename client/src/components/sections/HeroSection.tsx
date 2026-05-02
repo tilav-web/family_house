@@ -102,7 +102,7 @@ export function HeroSection() {
       <div className="pointer-events-none fixed inset-0 z-0">
         <img
           src={posterImage}
-          alt=""
+          alt={t('hero.title') || 'Family House Qarshi mehmonxonasi'}
           className="h-full w-full object-cover"
           style={{
             opacity: videoReady ? 0 : 1,

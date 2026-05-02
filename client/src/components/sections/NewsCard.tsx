@@ -21,7 +21,7 @@ export function NewsCard({ item, variant = 'default' }: NewsCardProps) {
   const isFeatured = variant === 'featured'
 
   return (
-    <Link to={`/news/${item.id}`} className="group block">
+    <Link to={`/news/${item.slug || item.id}`} className="group block">
       <article
         className={`client-panel-strong overflow-hidden rounded-lg transition-transform duration-300 group-hover:-translate-y-1 ${
           isFeatured ? 'h-full lg:grid lg:grid-cols-[1.08fr_0.92fr]' : 'h-full'

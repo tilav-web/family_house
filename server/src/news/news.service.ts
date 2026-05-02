@@ -5,6 +5,10 @@ import { News } from './news.entity';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { deleteUploadedFile } from '../common/storage/upload.util';
+import { pickSlugSource, slugify } from '../common/utils/slugify.util';
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class NewsService {
@@ -32,24 +36,36 @@ export class NewsService {
     };
   }
 
-  async findOne(id: string, includeDrafts = false): Promise<News> {
-    const news = await this.newsRepository.findOne({
-      where: includeDrafts ? { id } : { id, isPublished: true },
-    });
+  async findOne(idOrSlug: string, includeDrafts = false): Promise<News> {
+    const isUuid = UUID_REGEX.test(idOrSlug);
+    const where = isUuid
+      ? includeDrafts
+        ? { id: idOrSlug }
+        : { id: idOrSlug, isPublished: true }
+      : includeDrafts
+        ? { slug: idOrSlug }
+        : { slug: idOrSlug, isPublished: true };
+    const news = await this.newsRepository.findOne({ where });
     if (!news) {
-      throw new NotFoundException(`News with id ${id} not found`);
+      throw new NotFoundException(`News ${idOrSlug} not found`);
     }
     return news;
   }
 
   async create(dto: CreateNewsDto): Promise<News> {
     const news = this.newsRepository.create(dto);
+    news.slug = await this.generateUniqueSlug(pickSlugSource(news.title), null);
     return this.newsRepository.save(news);
   }
 
   async update(id: string, dto: UpdateNewsDto): Promise<News> {
     const news = await this.findOne(id, true);
+    const previousTitleSource = pickSlugSource(news.title);
     Object.assign(news, dto);
+    const nextTitleSource = pickSlugSource(news.title);
+    if (!news.slug || previousTitleSource !== nextTitleSource) {
+      news.slug = await this.generateUniqueSlug(nextTitleSource, news.id);
+    }
     return this.newsRepository.save(news);
   }
 
@@ -69,5 +85,25 @@ export class NewsService {
       await deleteUploadedFile(previousUrl);
     }
     return saved;
+  }
+
+  private async generateUniqueSlug(
+    source: string,
+    excludeId: string | null,
+  ): Promise<string> {
+    const base = slugify(source) || 'news';
+    let candidate = base;
+    let counter = 2;
+    while (true) {
+      const existing = await this.newsRepository.findOne({
+        where: { slug: candidate },
+        select: { id: true, slug: true },
+      });
+      if (!existing || existing.id === excludeId) {
+        return candidate;
+      }
+      candidate = `${base}-${counter}`;
+      counter += 1;
+    }
   }
 }

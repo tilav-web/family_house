@@ -102,7 +102,7 @@ export default function NewsDetailPage() {
     '@type': 'NewsArticle',
     headline: title,
     description: seoDescription,
-    url: `${SITE_URL}/news/${news.id}`,
+    url: `${SITE_URL}/news/${news.slug || news.id}`,
     datePublished: news.createdAt,
     dateModified: news.updatedAt || news.createdAt,
     inLanguage: i18n.language,
@@ -123,7 +123,7 @@ export default function NewsDetailPage() {
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `${SITE_URL}/news/${news.id}`,
+      '@id': `${SITE_URL}/news/${news.slug || news.id}`,
     },
   }
 
@@ -133,7 +133,7 @@ export default function NewsDetailPage() {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Family House', item: SITE_URL },
       { '@type': 'ListItem', position: 2, name: t('news.label') || 'Yangiliklar', item: `${SITE_URL}/#news` },
-      { '@type': 'ListItem', position: 3, name: title, item: `${SITE_URL}/news/${news.id}` },
+      { '@type': 'ListItem', position: 3, name: title, item: `${SITE_URL}/news/${news.slug || news.id}` },
     ],
   }
 
@@ -142,7 +142,7 @@ export default function NewsDetailPage() {
       <Seo
         title={`${title} — Family House Qarshi`}
         description={seoDescription}
-        path={`/news/${news.id}`}
+        path={`/news/${news.slug || news.id}`}
         image={seoImage}
         type="article"
         locale={i18n.language}

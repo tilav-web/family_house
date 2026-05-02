@@ -163,7 +163,7 @@ export default function RoomDetailPage() {
     '@type': 'HotelRoom',
     name,
     description: seoDescription,
-    url: `${SITE_URL}/rooms/${room.id}`,
+    url: `${SITE_URL}/rooms/${room.slug || room.id}`,
     ...(seoImage ? { image: seoImage } : {}),
     ...(amenities.length > 0
       ? {
@@ -187,7 +187,7 @@ export default function RoomDetailPage() {
             price: lowestPrice,
             priceCurrency: room.currency || 'UZS',
             availability: 'https://schema.org/InStock',
-            url: `${SITE_URL}/rooms/${room.id}`,
+            url: `${SITE_URL}/rooms/${room.slug || room.id}`,
           },
         }
       : {}),
@@ -213,7 +213,7 @@ export default function RoomDetailPage() {
         '@type': 'ListItem',
         position: 3,
         name,
-        item: `${SITE_URL}/rooms/${room.id}`,
+        item: `${SITE_URL}/rooms/${room.slug || room.id}`,
       },
     ],
   }
@@ -223,7 +223,7 @@ export default function RoomDetailPage() {
       <Seo
         title={seoTitle}
         description={seoDescription}
-        path={`/rooms/${room.id}`}
+        path={`/rooms/${room.slug || room.id}`}
         image={seoImage}
         type="product"
         locale={i18n.language}

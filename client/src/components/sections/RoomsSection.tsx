@@ -78,7 +78,7 @@ export function RoomsSection() {
 
             return (
               <StaggerItem key={room.id}>
-                <Link to={`/rooms/${room.id}`} className="group block">
+                <Link to={`/rooms/${room.slug || room.id}`} className="group block">
                   <article className="client-panel-strong relative overflow-hidden rounded-lg transition-transform duration-300 group-hover:-translate-y-1">
                     <div className="relative h-64 overflow-hidden bg-slate-200">
                       {room.thumbnailUrl ? (

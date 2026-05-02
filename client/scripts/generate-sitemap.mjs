@@ -58,8 +58,9 @@ async function main() {
       for (const room of rooms) {
         if (!room?.id) continue
         if (room.isActive === false) continue
+        const segment = room.slug || room.id
         entries.push({
-          loc: `/rooms/${room.id}`,
+          loc: `/rooms/${segment}`,
           lastmod: room.updatedAt
             ? new Date(room.updatedAt).toISOString()
             : undefined,
@@ -80,8 +81,9 @@ async function main() {
     for (const article of items) {
       if (!article?.id) continue
       if (article.isPublished === false) continue
+      const segment = article.slug || article.id
       entries.push({
-        loc: `/news/${article.id}`,
+        loc: `/news/${segment}`,
         lastmod: article.updatedAt
           ? new Date(article.updatedAt).toISOString()
           : article.createdAt

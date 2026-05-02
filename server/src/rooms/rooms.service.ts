@@ -18,7 +18,11 @@ import { UpdatePanoramaSceneDto } from './dto/update-panorama-scene.dto';
 import { CreatePanoramaHotspotDto } from './dto/create-panorama-hotspot.dto';
 import { UpdatePanoramaHotspotDto } from './dto/update-panorama-hotspot.dto';
 import { deleteUploadedFile, getUploadsRoot } from '../common/storage/upload.util';
+import { pickSlugSource, slugify } from '../common/utils/slugify.util';
 import { spawn } from 'child_process';
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class RoomsService {
@@ -70,9 +74,12 @@ export class RoomsService {
     return rooms.map((room) => this.serializeRoom(room, true));
   }
 
-  async findOnePublic(id: string): Promise<Room> {
+  async findOnePublic(idOrSlug: string): Promise<Room> {
+    const where = UUID_REGEX.test(idOrSlug)
+      ? { id: idOrSlug, isActive: true }
+      : { slug: idOrSlug, isActive: true };
     const room = await this.roomsRepository.findOne({
-      where: { id, isActive: true },
+      where,
       relations: {
         images: true,
         scenes: {
@@ -84,7 +91,7 @@ export class RoomsService {
     });
 
     if (!room) {
-      throw new NotFoundException(`Room with id ${id} not found`);
+      throw new NotFoundException(`Room ${idOrSlug} not found`);
     }
 
     return this.serializeRoom(room, false);
@@ -112,15 +119,41 @@ export class RoomsService {
 
   async create(dto: CreateRoomDto): Promise<Room> {
     const room = this.roomsRepository.create(dto);
+    room.slug = await this.generateUniqueSlug(pickSlugSource(room.name), null);
     const savedRoom = await this.roomsRepository.save(room);
     return this.findOneAdmin(savedRoom.id);
   }
 
   async update(id: string, dto: UpdateRoomDto): Promise<Room> {
     const room = await this.findOneEntityOrThrow(id);
+    const previousNameSource = pickSlugSource(room.name);
     Object.assign(room, dto);
+    const nextNameSource = pickSlugSource(room.name);
+    if (!room.slug || previousNameSource !== nextNameSource) {
+      room.slug = await this.generateUniqueSlug(nextNameSource, room.id);
+    }
     await this.roomsRepository.save(room);
     return this.findOneAdmin(id);
+  }
+
+  private async generateUniqueSlug(
+    source: string,
+    excludeId: string | null,
+  ): Promise<string> {
+    const base = slugify(source) || 'room';
+    let candidate = base;
+    let counter = 2;
+    while (true) {
+      const existing = await this.roomsRepository.findOne({
+        where: { slug: candidate },
+        select: { id: true, slug: true },
+      });
+      if (!existing || existing.id === excludeId) {
+        return candidate;
+      }
+      candidate = `${base}-${counter}`;
+      counter += 1;
+    }
   }
 
   async remove(id: string): Promise<void> {
