@@ -346,6 +346,8 @@ export class RoomsService {
       panoramaFilename = `${parsed.name}.jpg`;
       panoramaPath = join(panoramaFolder, panoramaFilename);
 
+      // .insp files from Insta360 cameras are already stitched equirectangular JPEGs.
+      // Only resize to a web-friendly resolution; do NOT apply v360/dfisheye conversion.
       await this.runFfmpeg([
         '-y',
         '-hide_banner',
@@ -354,7 +356,9 @@ export class RoomsService {
         '-i',
         sourcePath,
         '-vf',
-        'v360=input=dfisheye:output=equirect:ih_fov=190:iv_fov=190:w=4096:h=2048',
+        'scale=8192:4096',
+        '-q:v',
+        '2',
         '-frames:v',
         '1',
         panoramaPath,
